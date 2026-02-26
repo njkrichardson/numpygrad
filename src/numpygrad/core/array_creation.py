@@ -39,3 +39,14 @@ def randn(shape: tuple[int, ...] | int = (1,), **kwargs) -> npg.ndarray:
     if isinstance(shape, int):
         shape = (shape,)
     return npg.array(npr.randn(*shape), **kwargs)
+
+
+def randint(
+    low: int, high: int | None = None, size: tuple[int, ...] | int = (1,), **kwargs
+) -> npg.ndarray:
+    if high is None:
+        high = low
+        low = 0
+    if isinstance(size, int):
+        size = (size,)
+    return npg.array(npr.randint(low, high, size), **kwargs)

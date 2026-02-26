@@ -1,73 +1,89 @@
+from hypothesis import given, assume, strategies as st
 import numpy as np
-import numpygrad as npg
+import numpy.random as npr
 import torch
 
+import numpygrad as npg
+from tests.strategies import (
+    generic_array,
+    shape_nd,
+    array_pair,
+    FLOAT_DTYPES,
+)
+from tests.configuration import (
+    check_equality,
+    VALUE_RANGE,
+    POW_RANGE,
+)
+
 npg.manual_seed(0)
+npr.seed(0)
 
 
-def test_add_constant():
-    x = npg.ones(1)
-    z = x + 1
+@given(generic_array(), st.integers(*VALUE_RANGE))
+def test_add_constant(arr: np.ndarray, constant: int):
+    x = npg.array(arr)
+    z = x + constant
 
-    reference = np.ones(1) + 1
-    np.testing.assert_array_equal(z.data, reference)
-
-
-def test_add_ndarray():
-    x = npg.ones(1)
-    z = x + np.array([2.0])
-
-    reference = np.ones(1) + np.array([2.0])
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr + constant
+    check_equality(z.data, reference)
 
 
-def test_add_basic():
-    xshape = (2,)
-    yshape = (2,)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(same_shape=True))
+def test_add_ndarray(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = B
     z = x + y
 
-    reference = np.ones(xshape) + np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A + B
+    check_equality(z.data, reference)
 
 
-def test_add_api():
-    xshape = (2,)
-    yshape = (2,)
+@given(array_pair(same_shape=True))
+def test_add_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
+    z = x + y
 
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+    reference = A + B
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True))
+def test_add_api(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = npg.add(x, y)
 
-    reference = np.ones(xshape) + np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A + B
+    check_equality(z.data, reference)
 
 
-def test_add_broadcast():
-    xshape = (2, 1)
-    yshape = (1, 2)
+@given(array_pair(broadcastable=True))
+def test_add_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
 
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+    x = npg.array(A)
+    y = npg.array(B)
     z = x + y
 
-    reference = np.ones(xshape) + np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A + B
+    check_equality(z.data, reference)
 
 
-def test_add_backward():
-    xshape = (2, 1)
-    yshape = (1, 2)
-
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
+@given(array_pair(same_shape=True, dtypes=FLOAT_DTYPES))
+def test_add_backward_basic(arrs):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
     z = x + y
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
     zt = xt + yt
 
     gxt, gyt = torch.autograd.grad(
@@ -75,74 +91,95 @@ def test_add_backward():
         inputs=(xt, yt),
         grad_outputs=torch.ones_like(zt),
     )
-
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
-
-
-def test_mul_constant():
-    x = npg.ones(1)
-    z = x * 2.0
-
-    reference = np.ones(1) * 2.0
-    np.testing.assert_array_equal(z.data, reference)
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
 
 
-def test_mul_ndarray():
-    x = npg.ones(1)
-    z = x * np.array([2.0])
+@given(array_pair(dtypes=FLOAT_DTYPES, broadcastable=True))
+def test_add_backward_bcast(arrs):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = x + y
+    z.backward()
 
-    reference = np.ones(1) * np.array([2.0])
-    np.testing.assert_array_equal(z.data, reference)
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = xt + yt
+
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
 
 
-def test_mul_basic():
-    xshape = (2,)
-    yshape = (2,)
+@given(generic_array(), st.integers(*VALUE_RANGE))
+def test_mul_constant(arr: np.ndarray, constant: int):
+    x = npg.array(arr)
+    z = x * constant
 
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+    reference = arr * constant
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True))
+def test_mul_ndarray(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    z = x * B
+
+    reference = A * B
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True))
+def test_mul_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = x * y
 
-    reference = np.ones(xshape) * np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A * B
+    check_equality(z.data, reference)
 
 
-def test_mul_api():
-    xshape = (2,)
-    yshape = (2,)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(same_shape=True))
+def test_mul_api(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = npg.mul(x, y)
 
-    reference = np.ones(xshape) * np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A * B
+    check_equality(z.data, reference)
 
 
-def test_mul_broadcast():
-    xshape = (2, 1)
-    yshape = (1, 2)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(broadcastable=True))
+def test_mul_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = x * y
 
-    reference = np.ones(xshape) * np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A * B
+    check_equality(z.data, reference)
 
 
-def test_mul_backward():
-    xshape = (2, 1)
-    yshape = (1, 2)
-
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
+@given(array_pair(dtypes=FLOAT_DTYPES, same_shape=True))
+def test_mul_backward_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
     z = x * y
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
     zt = xt * yt
 
     gxt, gyt = torch.autograd.grad(
@@ -151,68 +188,77 @@ def test_mul_backward():
         grad_outputs=torch.ones_like(zt),
     )
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
 
 
-def test_pow_basic():
-    xshape = (2,)
-    x = npg.ones(xshape)
-    z = x**2
+@given(generic_array(dtypes=FLOAT_DTYPES), st.integers(*POW_RANGE))
+def test_pow_basic(arr: np.ndarray, constant: int):
+    x = npg.array(arr)
+    z = x**constant
 
-    reference = np.ones(xshape) ** 2
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr**constant
+    check_equality(z.data, reference)
 
 
-def test_pow_backward():
-    xshape = (2,)
-    x = npg.ones(xshape, requires_grad=True)
-    z = x**2
+@given(generic_array(dtypes=FLOAT_DTYPES), st.integers(*POW_RANGE))
+def test_pow_backward(arr: np.ndarray, constant: int):
+    x = npg.array(arr, requires_grad=True)
+    z = x**constant
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    zt = xt**2
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    zt = xt**constant
 
     gxt = torch.autograd.grad(
         outputs=zt,
         inputs=(xt,),
         grad_outputs=torch.ones_like(zt),
     )[0]
-
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-
-
-def test_div_constant():
-    xshape = (2,)
-    x = npg.ones(xshape)
-    z = x / 2.0
-
-    reference = np.ones(xshape) / 2.0
-    np.testing.assert_array_equal(z.data, reference)
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
 
 
-def test_div_ndarray():
-    xshape = (2,)
-    x = npg.ones(xshape)
-    y = np.array([2.0])
-
-    z = x / y
-
-    reference = np.ones(xshape) / y
-    np.testing.assert_array_equal(z.data, reference)
+def _make_safe_for_div(A: np.ndarray, margin: float = 1e-4) -> np.ndarray:
+    return np.where(
+        A >= 0, np.maximum(A, margin), np.minimum(A, -margin)
+    )  # avoids extreme values
 
 
-def test_div_backward():
-    xshape = (2, 1)
-    yshape = (1, 2)
+@given(generic_array())
+def test_div_constant(arr: np.ndarray):
+    arr = _make_safe_for_div(arr)  # avoid extreme values
+    constant = _make_safe_for_div(npr.uniform(low=-8, high=8, size=(1,))).item()
+    x = npg.array(arr)  # avoid extreme values
+    z = x / constant
+    reference = arr / constant
+    check_equality(z.data, reference)
 
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
+
+@given(shape_nd())
+def test_div_ndarray(shape):
+    A = _make_safe_for_div(npr.uniform(*VALUE_RANGE, size=shape))
+    B = _make_safe_for_div(npr.uniform(*VALUE_RANGE, size=shape))
+    x = npg.array(A)
+    z = x / B
+
+    reference = A / B
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True, dtypes=FLOAT_DTYPES))
+def test_div_backward_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    A = _make_safe_for_div(A)  # avoid extreme values
+    B = _make_safe_for_div(B)  # avoid division by zero
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
     z = x / y
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
+    xt = torch.from_numpy(np.array(A)).requires_grad_(True)
+    yt = torch.from_numpy(np.array(B)).requires_grad_(True)
     zt = xt / yt
 
     gxt, gyt = torch.autograd.grad(
@@ -221,23 +267,47 @@ def test_div_backward():
         grad_outputs=torch.ones_like(zt),
     )
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
 
 
-def test_relu_basic():
-    xshape = (2,)
-    arr = np.random.randn(*xshape)
-    x = npg.array(arr, requires_grad=True)
+@given(array_pair(broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_div_backward_bcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    A = _make_safe_for_div(A)  # avoid extreme values
+    B = _make_safe_for_div(B)  # avoid division by zero
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = x / y
+    z.backward()
+
+    xt = torch.from_numpy(np.array(A)).requires_grad_(True)
+    yt = torch.from_numpy(np.array(B)).requires_grad_(True)
+    zt = xt / yt
+
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+@given(generic_array())
+def test_relu_basic(arr: np.ndarray):
+    x = npg.array(arr)
     z = npg.relu(x)
 
-    reference = np.maximum(np.zeros(xshape), arr)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = np.maximum(0.0, arr)
+    check_equality(z.data, reference)
 
 
-def test_relu_backward():
-    xshape = (16,)
-    arr = np.random.randn(*xshape)
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_relu_backward(arr: np.ndarray):
     x = npg.array(arr, requires_grad=True)
     y = npg.relu(x)
     z = y.sum()
@@ -252,5 +322,5 @@ def test_relu_backward():
         inputs=(xt,),
         grad_outputs=torch.ones_like(zt),
     )[0]
-
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
