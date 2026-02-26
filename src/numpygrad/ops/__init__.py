@@ -3,6 +3,7 @@ from numpygrad.core.dispatch import dispatch
 from numpygrad.core.array import Array
 from numpygrad.ops.core import ArrayCoercible
 
+import numpygrad.ops.comparators as comparators
 import numpygrad.ops.elementwise as elementwise
 import numpygrad.ops.reductions as reductions
 import numpygrad.ops.linalg as linalg

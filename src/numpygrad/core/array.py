@@ -19,6 +19,7 @@ class Array:
         device: DeviceId | str = "cpu_np",
         requires_grad: bool = False,
         label: str = "",
+        dtype: np.dtype | None = None,
     ):
         if isinstance(data, (int, float)):
             data = np.array(data)
@@ -28,9 +29,12 @@ class Array:
             pass
 
         self.data: np.ndarray = data  # type: ignore
+        if dtype is not None:
+            self.data = self.data.astype(dtype)
+
         self.device: DeviceId = DeviceId(device)
         self.requires_grad = requires_grad
-        self.grad = np.zeros_like(data) if requires_grad else None
+        self.grad = np.zeros_like(self.data) if requires_grad else None
 
         self.grad_fn = None
         self.ctx = None
@@ -45,6 +49,18 @@ class Array:
     def ndim(self) -> int:
         return self.data.ndim
 
+    @property
+    def dtype(self) -> np.dtype:
+        return self.data.dtype
+
+    @property
+    def nbytes(self) -> int:
+        return self.data.nbytes
+
+    @property
+    def size(self) -> int:
+        return self.data.size
+
     def __repr__(self) -> str:
         out = f"Array(data={self.data}"
         if self.requires_grad:
@@ -55,6 +71,27 @@ class Array:
             out += f", label={self.label}"
         out += ")"
         return out
+
+    def __getitem__(self, key) -> "Array":
+        return dispatch(OperatorId.SLICE, self, key=key)
+
+    def __gt__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.GT, self, other)
+
+    def __lt__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.LT, self, other)
+
+    def __ge__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.GE, self, other)
+
+    def __le__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.LE, self, other)
+
+    def __eq__(self, other: ArrayCoercible) -> "Array":  # type: ignore
+        return dispatch(OperatorId.EQ, self, other)
+
+    def __ne__(self, other: ArrayCoercible) -> "Array":  # type: ignore
+        return dispatch(OperatorId.NE, self, other)
 
     def __mul__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.MUL, self, other)
@@ -86,7 +123,9 @@ class Array:
     def transpose(self, axes: tuple[int, ...]) -> "Array":
         return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
 
-    def reshape(self, new_shape: tuple[int, ...] | int) -> "Array":
+    def reshape(self, *new_shape) -> "Array":
+        if len(new_shape) == 1 and isinstance(new_shape[0], (tuple, list)):
+            new_shape = new_shape[0]
         return dispatch(OperatorId.RESHAPE, self, new_shape=new_shape)
 
     def view(self, new_shape: tuple[int, ...] | int) -> "Array":
@@ -110,8 +149,8 @@ class Array:
         visited = set()
 
         def build(node):
-            if node not in visited:
-                visited.add(node)
+            if id(node) not in visited:
+                visited.add(id(node))
                 for parent in getattr(node, "parents", ()):
                     build(parent)
                 topo.append(node)

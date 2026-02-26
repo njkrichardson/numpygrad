@@ -18,8 +18,13 @@ def zeros_like(x: npg.ndarray | np.ndarray, **kwargs) -> npg.ndarray:
     )
 
 
-def arange(start: float, stop: float, step: float) -> npg.ndarray:
-    return npg.array(np.arange(start, stop, step))
+def arange(
+    start: float, stop: float | None = None, step: int = 1, **kwargs
+) -> npg.ndarray:
+    if stop is None:
+        stop = start
+        start = 0
+    return npg.array(np.arange(start, stop, step), **kwargs)
 
 
 def linspace(start: float, stop: float, num: int) -> npg.ndarray:
