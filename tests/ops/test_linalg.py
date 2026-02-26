@@ -1,75 +1,94 @@
+from hypothesis import given, strategies as st
 import numpy as np
 import torch
 
 import numpygrad as npg
-
+from tests.configuration import (
+    check_equality,
+)
+from tests.strategies import (
+    shape_nd,
+    array_pair,
+    FLOAT_DTYPES,
+)
 npg.manual_seed(0)
 
 
-def test_mm_basic():
-    xshape = (3, 2)
-    yshape = (2, 3)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(min_dims=2, max_dims=2, mm_broadcastable=True))
+def test_mm_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = x @ y
 
-    reference = np.ones(xshape) @ np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A @ B
+    check_equality(z.data, reference)
 
 
-def test_mm_api():
-    xshape = (3, 2)
-    yshape = (2, 3)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(min_dims=2, max_dims=2, mm_broadcastable=True))
+def test_mm_api(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = npg.mm(x, y)
 
-    reference = np.ones(xshape) @ np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A @ B
+    check_equality(z.data, reference)
 
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
-    z = npg.matmul(x, y)
-    np.testing.assert_array_equal(z.data, reference)
-
-
-def test_mm_batched():
-    xshape = (4, 3, 2)
-    yshape = (4, 2, 3)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(min_dims=3, max_dims=3, mm_broadcastable=True))
+def test_mm_batched(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = x @ y
 
-    reference = np.ones(xshape) @ np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A @ B
+    check_equality(z.data, reference)
 
-
-def test_mm_batched_broadcast():
-    xshape = (1, 4, 3, 2)
-    yshape = (4, 1, 2, 3)
-
-    x = npg.ones(xshape)
-    y = npg.ones(yshape)
+@given(array_pair(min_dims=3, mm_broadcastable=True))
+def test_mm_batched_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
     z = x @ y
 
-    reference = np.ones(xshape) @ np.ones(yshape)
-    np.testing.assert_array_equal(z.data, reference)
+    reference = A @ B
+    check_equality(z.data, reference)
 
 
-def test_mm_basic_bwd():
-    xshape = (3, 2)
-    yshape = (2, 3)
-
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
+@given(array_pair(min_dims=2, max_dims=2, mm_broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_mm_basic_bwd(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
     z = x @ y
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = xt @ yt
+
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+@given(array_pair(min_dims=3, max_dims=3, mm_broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_mm_bwd_batched(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = x @ y
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
     zt = xt @ yt
 
     gxt, gyt = torch.autograd.grad(
@@ -78,21 +97,21 @@ def test_mm_basic_bwd():
         grad_outputs=torch.ones_like(zt),
     )
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
 
 
-def test_mm_bwd_batched():
-    xshape = (4, 3, 2)
-    yshape = (4, 2, 3)
-
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
+@given(array_pair(min_dims=3, mm_broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_mm_bwd_batched_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
     z = x @ y
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
     zt = xt @ yt
 
     gxt, gyt = torch.autograd.grad(
@@ -101,28 +120,6 @@ def test_mm_bwd_batched():
         grad_outputs=torch.ones_like(zt),
     )
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
-
-
-def test_mm_bwd_batched_broadcast():
-    xshape = (1, 4, 3, 2)
-    yshape = (4, 1, 2, 3)
-
-    x = npg.ones(xshape, requires_grad=True)
-    y = npg.ones(yshape, requires_grad=True)
-    z = x @ y
-    z.backward()
-
-    xt = torch.ones(xshape, requires_grad=True)
-    yt = torch.ones(yshape, requires_grad=True)
-    zt = xt @ yt
-
-    gxt, gyt = torch.autograd.grad(
-        outputs=zt,
-        inputs=(xt, yt),
-        grad_outputs=torch.ones_like(zt),
-    )
-
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
-    np.testing.assert_array_equal(y.grad, gyt.numpy())
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())

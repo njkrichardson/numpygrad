@@ -1,36 +1,45 @@
+from hypothesis import given
 import numpy as np
 import torch
 
 import numpygrad as npg
+from tests.configuration import (
+    check_equality,
+)
+from tests.strategies import (
+    generic_array,
+    FLOAT_DTYPES,
+)
 
 npg.manual_seed(0)
 
 
-def test_sum_basic():
-    xshape = (2,)
-    x = npg.ones(xshape)
+
+@given(generic_array())
+def test_sum_basic(arr: np.ndarray):
+    x = npg.array(arr)
     z = x.sum()
 
-    reference = np.ones(xshape).sum()
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr.sum()
+    check_equality(z.data, reference)
 
 
-def test_sum_api():
-    xshape = (2,)
-    x = npg.ones(xshape)
+@given(generic_array())
+def test_sum_api(arr: np.ndarray):
+    x = npg.array(arr)
     z = npg.sum(x)
 
-    reference = np.ones(xshape).sum()
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr.sum()
+    check_equality(z.data, reference)
 
 
-def test_sum_backward():
-    xshape = (2,)
-    x = npg.ones(xshape, requires_grad=True)
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_sum_backward(arr: np.ndarray):
+    x = npg.array(arr, requires_grad=True)
     z = x.sum()
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
+    xt = torch.from_numpy(arr).requires_grad_(True)
     zt = xt.sum()
 
     gxt = torch.autograd.grad(
@@ -39,34 +48,35 @@ def test_sum_backward():
         grad_outputs=torch.ones_like(zt),
     )[0]
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
 
 
-def test_mean_basic():
-    xshape = (2,)
-    x = npg.ones(xshape)
+@given(generic_array())
+def test_mean_basic(arr: np.ndarray):
+    x = npg.array(arr)
     z = x.mean()
 
-    reference = np.ones(xshape).mean()
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr.mean()
+    check_equality(z.data, reference)
 
 
-def test_mean_api():
-    xshape = (2,)
-    x = npg.ones(xshape)
+@given(generic_array())
+def test_mean_api(arr: np.ndarray):
+    x = npg.array(arr)
     z = npg.mean(x)
 
-    reference = np.ones(xshape).mean()
-    np.testing.assert_array_equal(z.data, reference)
+    reference = arr.mean()
+    check_equality(z.data, reference)
 
 
-def test_mean_backward():
-    xshape = (2,)
-    x = npg.ones(xshape, requires_grad=True)
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_mean_backward(arr: np.ndarray):
+    x = npg.array(arr, requires_grad=True)
     z = x.mean()
     z.backward()
 
-    xt = torch.ones(xshape, requires_grad=True)
+    xt = torch.from_numpy(arr).requires_grad_(True)
     zt = xt.mean()
 
     gxt = torch.autograd.grad(
@@ -75,4 +85,5 @@ def test_mean_backward():
         grad_outputs=torch.ones_like(zt),
     )[0]
 
-    np.testing.assert_array_equal(x.grad, gxt.numpy())
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())

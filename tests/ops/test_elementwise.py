@@ -1,4 +1,4 @@
-from hypothesis import given, assume, strategies as st
+from hypothesis import given, strategies as st
 import numpy as np
 import numpy.random as npr
 import torch

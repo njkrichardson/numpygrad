@@ -89,8 +89,8 @@ def _array_pair_broadcastable(
     mm_broadcastable=False,
 ):
     if mm_broadcastable:
-        assert max_dims >= 3, "Need at least 3 dimensions for batch matmul"
-        min_dims = max(min_dims, 3)
+        assert max_dims >= 2
+        min_dims = max(min_dims, 2)
 
     ndim = draw(st.integers(min_value=min_dims, max_value=max_dims))
     dtype = draw(st.sampled_from(dtypes))
