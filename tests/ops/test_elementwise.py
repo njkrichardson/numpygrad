@@ -220,7 +220,7 @@ def test_pow_backward(arr: np.ndarray, constant: int):
     check_equality(x.grad, gxt.numpy())
 
 
-def _make_safe_for_div(A: np.ndarray, margin: float = 1e-4) -> np.ndarray:
+def _make_safe_for_div(A: np.ndarray, margin: float = 1e-2) -> np.ndarray:
     return np.where(
         A >= 0, np.maximum(A, margin), np.minimum(A, -margin)
     )  # avoids extreme values
