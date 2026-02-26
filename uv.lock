@@ -675,30 +675,47 @@ name = "numpygrad"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "graphviz" },
+    { name = "numpy" },
+]
+
+[package.optional-dependencies]
+examples = [
+    { name = "matplotlib" },
+]
+tests = [
     { name = "hypothesis" },
+    { name = "pytest" },
+    { name = "torch" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "graphviz" },
     { name = "ipdb" },
     { name = "matplotlib" },
-    { name = "numpy" },
     { name = "pre-commit" },
-    { name = "pytest" },
     { name = "setuptools" },
     { name = "tensorboard" },
-    { name = "torch" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "hypothesis", marker = "extra == 'tests'", specifier = ">=6.151.9" },
+    { name = "matplotlib", marker = "extra == 'examples'", specifier = ">=3.10.8" },
+    { name = "numpy", specifier = ">=2.4.2" },
+    { name = "pytest", marker = "extra == 'tests'", specifier = ">=9.0.2" },
+    { name = "torch", marker = "extra == 'tests'", specifier = ">=2.10.0" },
+]
+provides-extras = ["tests", "examples"]
+
+[package.metadata.requires-dev]
+dev = [
     { name = "graphviz", specifier = ">=0.21" },
-    { name = "hypothesis", specifier = ">=6.151.9" },
     { name = "ipdb", specifier = ">=0.13.13" },
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "numpy", specifier = ">=2.4.2" },
     { name = "pre-commit", specifier = ">=4.5.1" },
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "setuptools", specifier = "<81.0.0" },
+    { name = "setuptools", specifier = ">=80.10.2" },
     { name = "tensorboard", specifier = ">=2.20.0" },
-    { name = "torch", specifier = ">=2.10.0" },
 ]
 
 [[package]]

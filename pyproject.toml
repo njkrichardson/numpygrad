@@ -5,14 +5,25 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "graphviz>=0.21",
+    "numpy>=2.4.2",
+]
+
+[project.optional-dependencies]
+tests = [
     "hypothesis>=6.151.9",
+    "pytest>=9.0.2",
+    "torch>=2.10.0",
+]
+examples = [
+    "matplotlib>=3.10.8",
+]
+
+[dependency-groups]
+dev = [
+    "graphviz>=0.21",
     "ipdb>=0.13.13",
     "matplotlib>=3.10.8",
-    "numpy>=2.4.2",
     "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
-    "setuptools<81.0.0",
+    "setuptools>=80.10.2",
     "tensorboard>=2.20.0",
-    "torch>=2.10.0",
 ]
