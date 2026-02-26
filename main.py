@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import numpygrad as npg
-from numpygrad.nn import Linear, MLP
+from numpygrad.nn import MLP
 
 npg.manual_seed(0)
 Log = npg.Log(__name__)
@@ -33,7 +33,7 @@ def main():
 
     optimizer = npg.optim.SGD(net.parameters(), step_size=1e-1)
 
-    num_examples: int = 1_024
+    num_examples: int = 2_048
     inputs = np.linspace(-2 * np.pi, 2 * np.pi, num_examples).reshape(-1, 1)
     inputs_norm = inputs / (2 * np.pi)
     snr_db = 10
@@ -48,9 +48,9 @@ def main():
         idx = np.random.choice(num_examples, batch_size, replace=False)
         return npg.array(inputs_norm[idx]), npg.array(targets[idx])
 
-    batch_size: int = 32
-    num_steps: int = 20000
-    report_every: int = 1000
+    batch_size: int = 64
+    num_steps: int = 1_000
+    report_every: int = 25
 
     for step in range(num_steps):
         x, y = get_batch(batch_size)
@@ -68,9 +68,10 @@ def main():
 
     _x_raw = np.linspace(-2 * np.pi, 2 * np.pi, 1000).reshape(-1, 1)
     _x = npg.array(_x_raw / (2 * np.pi))
-    plt.figure(figsize=(18, 12))
-    plt.scatter(inputs, targets, c="tab:blue")
-    plt.plot(_x_raw, net(_x).data, c="tab:orange")
+    plt.figure(figsize=(18, 10))
+    plt.scatter(inputs, targets, c="tab:blue", alpha=0.5)
+    plt.plot(_x_raw, net(_x).data, c="tab:orange", linewidth=3)
+    plt.tight_layout()
     plt.savefig(npg.configuration.MEDIA_DIR / "mlp_fit.png")
     plt.close()
 
