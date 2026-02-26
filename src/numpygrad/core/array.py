@@ -70,7 +70,7 @@ class Array:
     def __pow__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.POW, self, other)
 
-    def __truediv__(self, other: int | float) -> "Array":
+    def __truediv__(self, other: "int | float | Array | np.ndarray") -> "Array":
         return self * other**-1
 
     def backward(self, grad: np.ndarray | None = None) -> None:
