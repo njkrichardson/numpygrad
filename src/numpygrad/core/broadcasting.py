@@ -1,6 +1,23 @@
 import numpy as np
 
 
+def reduce_grad_to_shape(grad, target_shape):
+    # sum along axes that were broadcasted
+    ndim_diff = grad.ndim - len(target_shape)
+    shape_aligned = (1,) * ndim_diff + target_shape
+    axes = tuple(
+        i
+        for i, (g_dim, t_dim) in enumerate(zip(grad.shape, shape_aligned))
+        if t_dim == 1
+    )
+    if axes:
+        grad = grad.sum(axis=axes, keepdims=True)
+    # remove extra leading dims if needed
+    while grad.ndim > len(target_shape):
+        grad = grad.sum(axis=0)
+    return grad
+
+
 def unbroadcast(grad: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
     """
     Reduce a gradient array `grad` to match `target_shape` by summing over

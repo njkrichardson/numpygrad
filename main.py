@@ -6,12 +6,13 @@ Log = npg.Log(__name__)
 
 
 def main():
-    a = npg.array([2.0, 3.0], requires_grad=True)
-    print(a)
-    b = a.sum()
-    print(b)
-    b.backward()
+    a = npg.ones((2, 3), requires_grad=True)
+    b = npg.ones((3,), requires_grad=True)
+    c = a @ b
+    print(c)
+    c.backward()
     print(a.grad)
+    print(b.grad)
 
 
 if __name__ == "__main__":

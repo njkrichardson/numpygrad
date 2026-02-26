@@ -41,6 +41,10 @@ class Array:
     def shape(self) -> tuple[int, ...]:
         return self.data.shape
 
+    @property
+    def ndim(self) -> int:
+        return self.data.ndim
+
     def __repr__(self) -> str:
         out = f"Array(data={self.data}"
         if self.requires_grad:
@@ -72,6 +76,9 @@ class Array:
 
     def __truediv__(self, other: "int | float | Array | np.ndarray") -> "Array":
         return self * other**-1
+
+    def __matmul__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.MATMUL, self, other)
 
     def sum(self, axis=None, keepdims=False) -> "Array":
         return dispatch(OperatorId.SUM, self, axis=axis, keepdims=keepdims)

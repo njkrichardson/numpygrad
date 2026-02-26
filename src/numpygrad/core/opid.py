@@ -6,3 +6,4 @@ class OperatorId(enum.StrEnum):
     MUL = enum.auto()
     POW = enum.auto()
     SUM = enum.auto()
+    MATMUL = enum.auto()

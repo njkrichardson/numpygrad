@@ -5,6 +5,7 @@ from numpygrad.ops.core import ArrayCoercible
 
 import numpygrad.ops.elementwise as elementwise
 import numpygrad.ops.reductions as reductions
+import numpygrad.ops.linalg as linalg
 
 
 def add(a: ArrayCoercible, b: ArrayCoercible) -> Array:
@@ -19,10 +20,20 @@ def sum(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
     return dispatch(OperatorId.SUM, a, axis=axis, keepdims=keepdims)
 
 
+def mm(a: ArrayCoercible, b: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.MATMUL, a, b)
+
+
+matmul = mm
+
+
 __all__ = [
     "add",
     "mul",
     "elementwise",
     "reductions",
     "sum",
+    "linalg",
+    "mm",
+    "matmul",
 ]
