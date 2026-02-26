@@ -86,6 +86,15 @@ class Array:
     def transpose(self, axes: tuple[int, ...]) -> "Array":
         return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
 
+    def reshape(self, new_shape: tuple[int, ...] | int) -> "Array":
+        return dispatch(OperatorId.RESHAPE, self, new_shape=new_shape)
+
+    def view(self, new_shape: tuple[int, ...] | int) -> "Array":
+        return self.reshape(new_shape)
+
+    def mean(self, axis: tuple[int, ...] | int, keepdims: bool = False) -> "Array":
+        return dispatch(OperatorId.MEAN, self, axis=axis, keepdims=keepdims)
+
     @property
     def T(self) -> "Array":
         return self.transpose(axes=tuple(reversed(range(self.ndim))))

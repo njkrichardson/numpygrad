@@ -8,7 +8,7 @@ from numpygrad.ops.core import ensure_array
 
 
 @register(OperatorId.TRANSPOSE)
-def mul_cpu(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
+def tranpose_cpu(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
     a = ensure_array(a)
     return Array(
         np.transpose(a.data, axes=axes),
@@ -41,3 +41,38 @@ class Transpose(Function):
 @register(OperatorId.TRANSPOSE, op_requirements=OperatorRequirements.Autograd)
 def transpose_autograd(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
     return Transpose.apply(a, axes)
+
+
+@register(OperatorId.RESHAPE)
+def reshape_cpu(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.reshape(a.data, shape=new_shape),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Reshape(Function):
+    @staticmethod
+    def forward(
+        ctx: Context, a: ArrayCoercible, new_shape: tuple[int, ...] | int
+    ) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+
+        return Array(
+            np.reshape(a.data, shape=new_shape),
+            device=a.device,
+            requires_grad=True,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return np.reshape(grad, shape=a.shape), None  # type: ignore
+
+
+@register(OperatorId.RESHAPE, op_requirements=OperatorRequirements.Autograd)
+def reshape_autograd(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Array:
+    return Reshape.apply(a, new_shape)

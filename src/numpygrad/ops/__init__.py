@@ -33,6 +33,14 @@ def transpose(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
     return dispatch(OperatorId.TRANSPOSE, a, axes=axes)
 
 
+def reshape(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Array:
+    return dispatch(OperatorId.RESHAPE, a, new_shape=new_shape)
+
+
+def mean(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
+    return dispatch(OperatorId.MEAN, a, axis=axis, keepdims=keepdims)
+
+
 matmul = mm
 
 
@@ -48,4 +56,6 @@ __all__ = [
     "relu",
     "transpose",
     "transforms",
+    "mean",
+    "reshape",
 ]

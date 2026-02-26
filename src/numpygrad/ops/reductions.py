@@ -45,3 +45,49 @@ def sum_autograd(
     a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
 ) -> Array:
     return Sum.apply(a, axis, keepdims)
+
+
+@register(OperatorId.MEAN)
+def mean_cpu(
+    a: ArrayCoercible, axis: tuple[int, ...] | int | None = None, keepdims: bool = False
+) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.mean(a.data, axis, keepdims=keepdims),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Mean(Function):
+    @staticmethod
+    def forward(
+        ctx: Context,
+        a: ArrayCoercible,
+        axis: tuple[int, ...] | int | None = None,
+        keepdims: bool = False,
+    ) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        out = np.mean(a.data, axis, keepdims=keepdims)
+        ctx.reduced_shape = out.shape
+
+        return Array(
+            out,
+            device=a.device,
+            requires_grad=True,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        reduced_shape = ctx.reduced_shape
+        grad_a = grad / np.prod(np.array(reduced_shape))
+        return expand_to_shape(grad, a.shape), None, None  # type:ignore
+
+
+@register(OperatorId.MEAN, op_requirements=OperatorRequirements.Autograd)
+def mean_autograd(
+    a: ArrayCoercible, axis: tuple[int, ...] | int | None = None, keepdims: bool = False
+) -> Array:
+    return Mean.apply(a, axis, keepdims)
