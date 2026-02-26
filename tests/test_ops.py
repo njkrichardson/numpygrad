@@ -274,6 +274,23 @@ def test_mm_basic():
     np.testing.assert_array_equal(z.data, reference)
 
 
+def test_mm_api():
+    xshape = (3, 2)
+    yshape = (2, 3)
+
+    x = npg.ones(xshape)
+    y = npg.ones(yshape)
+    z = npg.mm(x, y)
+
+    reference = np.ones(xshape) @ np.ones(yshape)
+    np.testing.assert_array_equal(z.data, reference)
+
+    x = npg.ones(xshape)
+    y = npg.ones(yshape)
+    z = npg.matmul(x, y)
+    np.testing.assert_array_equal(z.data, reference)
+
+
 def test_mm_batched():
     xshape = (4, 3, 2)
     yshape = (4, 2, 3)
