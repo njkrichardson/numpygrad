@@ -4,7 +4,8 @@ from numpygrad.core.array import Array
 from numpygrad.core.registry import register, OperatorRequirements
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.function import Function, Context
-from numpygrad.ops.core import ArrayCoercible, ensure_array, unbroadcast
+from numpygrad.ops.core import ArrayCoercible, ensure_array
+from numpygrad.core.broadcasting import unbroadcast
 
 
 @register(OperatorId.MUL)
@@ -31,7 +32,9 @@ class Mul(Function):
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
         a, b = ctx.saved_arrays
-        return b.data * grad, a.data * grad
+        agrad = unbroadcast(grad * b.data, a.shape)
+        bgrad = unbroadcast(grad * a.data, b.shape)
+        return agrad, bgrad
 
 
 @register(OperatorId.MUL, op_requirements=OperatorRequirements.Autograd)
@@ -63,9 +66,7 @@ class Add(Function):
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
         a, b = ctx.saved_arrays
-        agrad = unbroadcast(grad, a.shape)
-        bgrad = unbroadcast(grad, b.shape)
-        return agrad, bgrad
+        return unbroadcast(grad, a.shape), unbroadcast(grad, b.shape)
 
 
 @register(OperatorId.ADD, op_requirements=OperatorRequirements.Autograd)
