@@ -72,3 +72,36 @@ class Add(Function):
 @register(OperatorId.ADD, op_requirements=OperatorRequirements.Autograd)
 def add_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Add.apply(a, b)
+
+
+@register(OperatorId.POW)
+def pow_cpu(a: ArrayCoercible, power: ArrayCoercible) -> Array:
+    a, power = ensure_array(a), ensure_array(power)
+    return Array(
+        a.data**power.data,
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Pow(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, power: ArrayCoercible) -> Array:
+        a, power = ensure_array(a), ensure_array(power)
+        ctx.store(a, power)
+        return Array(
+            a.data**power.data,
+            device=a.device,
+            requires_grad=True,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        a, power = ctx.saved_arrays
+        agrad = power.data * (a.data ** (power.data - 1)) * grad
+        return (agrad, None)  # type: ignore
+
+
+@register(OperatorId.POW, op_requirements=OperatorRequirements.Autograd)
+def pow_autograd(a: ArrayCoercible, power: ArrayCoercible) -> Array:
+    return Pow.apply(a, ensure_array(power))

@@ -130,3 +130,30 @@ def test_mul_backward():
 
     np.testing.assert_array_equal(x.grad, gxt.numpy())
     np.testing.assert_array_equal(y.grad, gyt.numpy())
+
+
+def test_pow_basic():
+    xshape = (2,)
+    x = npg.ones(xshape)
+    z = x**2
+
+    reference = np.ones(xshape) ** 2
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_pow_backward():
+    xshape = (2,)
+    x = npg.ones(xshape, requires_grad=True)
+    z = x**2
+    z.backward()
+
+    xt = torch.ones(xshape, requires_grad=True)
+    zt = xt**2
+
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+
+    np.testing.assert_array_equal(x.grad, gxt.numpy())

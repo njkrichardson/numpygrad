@@ -61,6 +61,18 @@ class Array:
     def __rmul__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.MUL, self, other)
 
+    def __neg__(self) -> "Array":
+        return self * -1.0
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __pow__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.POW, self, other)
+
+    def __truediv__(self, other: int | float) -> "Array":
+        return self * other**-1
+
     def backward(self, grad: np.ndarray | None = None) -> None:
         if grad is None:
             grad = np.ones_like(self.data)
@@ -91,94 +103,3 @@ class Array:
             for parent, parent_grad in zip(node.parents, grads):
                 if parent.requires_grad:
                     parent.grad += parent_grad
-
-    # def _array(self, other: Any) -> "Array":
-    #     if isinstance(other, Array):
-    #         return other
-    #     elif isinstance(other, np.ndarray):
-    #         return Array(other)
-    #     elif isinstance(other, (int, float)):
-    #         return Array(other)
-    #     else:
-    #         raise NotImplementedError
-
-    # def __add__(self, _other: "ArrayConsumable | Array") -> "Array":
-    #     other = self._array(_other)
-    #     out = Array(self.data + other.data, (self, other), Operation.ADD)
-    #
-    #     def vjp():
-    #         self.grad += unbroadcast(out.grad, self.data.shape)
-    #         other.grad += unbroadcast(out.grad, other.data.shape)
-    #
-    #     out.vjp = vjp
-    #     return out
-    #
-    # def __neg__(self) -> "Array":
-    #     return self * np.array(-1)
-    #
-    # def __sub__(self, other):
-    #     return self + (-other)
-    #
-    # def __pow__(self, other: int | float) -> "Array":
-    #     assert isinstance(other, (int, float))
-    #     if other == -1:
-    #         label = "/"
-    #         op = Operation.DIV
-    #     else:
-    #         label = f"**{other}"
-    #         op = Operation.POW
-    #
-    #     out = Array(self.data**other, (self,), label=label, op=op)
-    #
-    #     def vjp():
-    #         self.grad += other * (self.data ** (other - 1)) * out.grad
-    #
-    #     out.vjp = vjp
-    #     return out
-    #
-    # def __truediv__(self, _other: ArrayConsumable) -> "Array":
-    #     other = self._array(_other)
-    #     return self * other**-1
-    #
-    # def __mul__(self, _other: ArrayConsumable) -> "Array":
-    #     other = self._array(_other)
-    #     out = Array(self.data * other.data, (self, other), Operation.MUL)
-    #
-    #     def vjp():
-    #         self.grad += other.data * out.grad
-    #         other.grad += self.data * out.grad
-    #
-    #     out.vjp = vjp
-    #     return out
-    #
-    # def __rmul__(self, other: "Array | np.ndarray") -> "Array":
-    #     return self * other
-    #
-    # def relu(self) -> "Array":
-    #     out = Array(np.maximum(0, self.data), (self,), Operation.RELU)
-    #
-    #     def vjp():
-    #         self.grad += (self.data > 0) * out.grad
-    #
-    #     out.vjp = vjp
-    #     return out
-
-    # def backward(self) -> None:
-    #     def toposort(node: Array) -> list[Array]:
-    #         sorted_nodes = []
-    #         visited: set[Array] = set()
-    #
-    #         def _toposort(_node: Array):
-    #             if _node not in visited:
-    #                 visited.add(_node)
-    #                 for child in _node.children:
-    #                     _toposort(child)
-    #                 sorted_nodes.append(_node)
-    #
-    #         _toposort(node)
-    #         return sorted_nodes
-    #
-    #     self.grad = np.ones_like(self.data)
-    #     topo = toposort(self)
-    #     for node in reversed(topo):
-    #         node.vjp()
