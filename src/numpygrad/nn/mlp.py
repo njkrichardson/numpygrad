@@ -1,6 +1,7 @@
 from numpygrad.nn.module import Module
 from numpygrad.nn.linear import Linear
 from numpygrad.core.array import Array
+from numpygrad.ops import relu
 
 
 class MLP(Module):
@@ -16,5 +17,5 @@ class MLP(Module):
 
     def __call__(self, x: Array) -> Array:
         for layer in self.layers[:-1]:
-            x = layer(x)
+            x = relu(layer(x))
         return self.layers[-1](x)

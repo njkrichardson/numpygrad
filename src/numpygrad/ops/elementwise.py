@@ -26,7 +26,7 @@ class Mul(Function):
         return Array(
             a.data * b.data,
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad or b.requires_grad,
         )
 
     @staticmethod
@@ -60,7 +60,7 @@ class Add(Function):
         return Array(
             a.data + b.data,
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad or b.requires_grad,
         )
 
     @staticmethod
@@ -92,14 +92,17 @@ class Pow(Function):
         return Array(
             a.data**power.data,
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
         a, power = ctx.saved_arrays
+        # agrad = power.data * (a.data ** (power.data - 1)) * grad
+        # return (agrad, None)  # type: ignore
         agrad = power.data * (a.data ** (power.data - 1)) * grad
-        return (agrad, None)  # type: ignore
+        agrad = unbroadcast(agrad, a.shape)
+        return agrad, None
 
 
 @register(OperatorId.POW, op_requirements=OperatorRequirements.Autograd)
@@ -125,7 +128,7 @@ class ReLU(Function):
         return Array(
             np.maximum(0, a.data),
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod

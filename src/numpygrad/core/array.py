@@ -92,7 +92,9 @@ class Array:
     def view(self, new_shape: tuple[int, ...] | int) -> "Array":
         return self.reshape(new_shape)
 
-    def mean(self, axis: tuple[int, ...] | int, keepdims: bool = False) -> "Array":
+    def mean(
+        self, axis: tuple[int, ...] | int | None = None, keepdims: bool = False
+    ) -> "Array":
         return dispatch(OperatorId.MEAN, self, axis=axis, keepdims=keepdims)
 
     @property

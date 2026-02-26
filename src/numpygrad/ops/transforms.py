@@ -27,7 +27,7 @@ class Transpose(Function):
         return Array(
             np.transpose(a.data, axes=axes),
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod
@@ -64,7 +64,7 @@ class Reshape(Function):
         return Array(
             np.reshape(a.data, shape=new_shape),
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod

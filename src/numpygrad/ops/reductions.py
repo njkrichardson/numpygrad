@@ -31,7 +31,7 @@ class Sum(Function):
         return Array(
             np.sum(a.data, axis, keepdims=keepdims),
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod
@@ -61,29 +61,36 @@ def mean_cpu(
 
 class Mean(Function):
     @staticmethod
-    def forward(
-        ctx: Context,
-        a: ArrayCoercible,
-        axis: tuple[int, ...] | int | None = None,
-        keepdims: bool = False,
-    ) -> Array:
+    def forward(ctx, a, axis=None, keepdims=False):
         a = ensure_array(a)
+
         ctx.store(a)
-        out = np.mean(a.data, axis, keepdims=keepdims)
-        ctx.reduced_shape = out.shape
+        ctx.axis = axis
+        ctx.keepdims = keepdims
+
+        if axis is None:
+            ctx.count = a.data.size
+        else:
+            axis_tuple = axis if isinstance(axis, tuple) else (axis,)
+            ctx.count = np.prod([a.shape[i] for i in axis_tuple])
+
+        out = np.mean(a.data, axis=axis, keepdims=keepdims)
 
         return Array(
             out,
             device=a.device,
-            requires_grad=True,
+            requires_grad=a.requires_grad,
         )
 
     @staticmethod
-    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+    def backward(ctx, grad):
         a = ctx.saved_arrays[0]
-        reduced_shape = ctx.reduced_shape
-        grad_a = grad / np.prod(np.array(reduced_shape))
-        return expand_to_shape(grad, a.shape), None, None  # type:ignore
+
+        grad = grad / ctx.count
+
+        grad = expand_to_shape(grad, a.shape)
+
+        return grad, None, None
 
 
 @register(OperatorId.MEAN, op_requirements=OperatorRequirements.Autograd)
