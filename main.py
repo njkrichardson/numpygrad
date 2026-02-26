@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 
 import numpygrad as npg
 from numpygrad.nn import MLP
@@ -26,6 +27,7 @@ def noise_power(signal: np.ndarray, snr_db: float) -> float:
 
 
 def main():
+    writer = SummaryWriter(log_dir=npg.configuration.TB_DIR)
     hidden_sizes = [32] * 8
     input_dim = 1
     output_dim = 1
@@ -60,11 +62,12 @@ def main():
         L.backward()
         optimizer.step()
         if step % report_every == 0:
-            print(
-                f"Step {step}: loss={mse(net(npg.array(inputs_norm)), npg.array(targets)).data.item():.4f}"
-            )
+            loss = mse(net(npg.array(inputs_norm)), npg.array(targets)).data.item()
+            print(f"Step {step}: loss={loss:.4f}")
+            writer.add_scalar("Loss/train", loss, step)
 
     print("Final loss:", mse(net(npg.array(inputs_norm)), npg.array(targets)).data)
+    writer.close()
 
     _x_raw = np.linspace(-2 * np.pi, 2 * np.pi, 1000).reshape(-1, 1)
     _x = npg.array(_x_raw / (2 * np.pi))
