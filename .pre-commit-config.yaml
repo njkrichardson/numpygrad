@@ -5,4 +5,5 @@ repos:
         name: Run pytest
         entry: pytest
         language: system  # uses your system Python
+        pass_filenames: false
         types: [python]

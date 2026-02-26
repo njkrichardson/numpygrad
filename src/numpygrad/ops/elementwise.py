@@ -105,3 +105,36 @@ class Pow(Function):
 @register(OperatorId.POW, op_requirements=OperatorRequirements.Autograd)
 def pow_autograd(a: ArrayCoercible, power: ArrayCoercible) -> Array:
     return Pow.apply(a, ensure_array(power))
+
+
+@register(OperatorId.RELU)
+def relu_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.maximum(0, a.data),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class ReLU(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(
+            np.maximum(0, a.data),
+            device=a.device,
+            requires_grad=True,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        agrad = np.where(a.data > 0, grad, 0)
+        return (agrad,)  # type: ignore
+
+
+@register(OperatorId.RELU, op_requirements=OperatorRequirements.Autograd)
+def relu_autograd(a: ArrayCoercible) -> Array:
+    return ReLU.apply(a)

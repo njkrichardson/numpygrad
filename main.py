@@ -6,13 +6,16 @@ Log = npg.Log(__name__)
 
 
 def main():
-    a = npg.ones((2, 3), requires_grad=True)
-    b = npg.ones((3,), requires_grad=True)
-    c = a @ b
-    print(c)
+    a = npg.randn((2, 3), requires_grad=True)
+    b = npg.relu(a)
+    c = b.sum()
+
+    print(a)
+    print(b)
+
     c.backward()
+
     print(a.grad)
-    print(b.grad)
 
 
 if __name__ == "__main__":

@@ -7,3 +7,4 @@ class OperatorId(enum.StrEnum):
     POW = enum.auto()
     SUM = enum.auto()
     MATMUL = enum.auto()
+    RELU = enum.auto()

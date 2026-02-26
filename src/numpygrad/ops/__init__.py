@@ -24,6 +24,10 @@ def mm(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return dispatch(OperatorId.MATMUL, a, b)
 
 
+def relu(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.RELU, a)
+
+
 matmul = mm
 
 
@@ -36,4 +40,5 @@ __all__ = [
     "linalg",
     "mm",
     "matmul",
+    "relu",
 ]

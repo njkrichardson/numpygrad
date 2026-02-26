@@ -384,4 +384,32 @@ def test_mm_bwd_batched_broadcast():
     np.testing.assert_array_equal(y.grad, gyt.numpy())
 
 
-def test(): ...
+def test_relu_basic():
+    xshape = (2,)
+    arr = np.random.randn(*xshape)
+    x = npg.array(arr, requires_grad=True)
+    z = npg.relu(x)
+
+    reference = np.maximum(np.zeros(xshape), arr)
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_relu_backward():
+    xshape = (16,)
+    arr = np.random.randn(*xshape)
+    x = npg.array(arr, requires_grad=True)
+    y = npg.relu(x)
+    z = y.sum()
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = torch.nn.functional.relu(xt)
+    zt = yt.sum()
+
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+
+    np.testing.assert_array_equal(x.grad, gxt.numpy())
