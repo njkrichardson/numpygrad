@@ -382,3 +382,6 @@ def test_mm_bwd_batched_broadcast():
 
     np.testing.assert_array_equal(x.grad, gxt.numpy())
     np.testing.assert_array_equal(y.grad, gyt.numpy())
+
+
+def test(): ...

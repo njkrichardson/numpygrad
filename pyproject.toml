@@ -9,6 +9,7 @@ dependencies = [
     "ipdb>=0.13.13",
     "matplotlib>=3.10.8",
     "numpy>=2.4.2",
+    "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "torch>=2.10.0",
 ]
