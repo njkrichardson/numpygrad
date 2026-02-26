@@ -30,5 +30,7 @@ def eye(n: int) -> npg.ndarray:
     return npg.array(np.eye(n))
 
 
-def randn(shape: tuple[int, ...] = (1,), **kwargs) -> npg.ndarray:
+def randn(shape: tuple[int, ...] | int = (1,), **kwargs) -> npg.ndarray:
+    if isinstance(shape, int):
+        shape = (shape,)
     return npg.array(npr.randn(*shape), **kwargs)

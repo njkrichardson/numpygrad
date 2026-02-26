@@ -8,3 +8,4 @@ class OperatorId(enum.StrEnum):
     SUM = enum.auto()
     MATMUL = enum.auto()
     RELU = enum.auto()
+    TRANSPOSE = enum.auto()

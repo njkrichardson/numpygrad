@@ -83,6 +83,13 @@ class Array:
     def sum(self, axis=None, keepdims=False) -> "Array":
         return dispatch(OperatorId.SUM, self, axis=axis, keepdims=keepdims)
 
+    def transpose(self, axes: tuple[int, ...]) -> "Array":
+        return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
+
+    @property
+    def T(self) -> "Array":
+        return self.transpose(axes=tuple(reversed(range(self.ndim))))
+
     def backward(self, grad: np.ndarray | None = None) -> None:
         if grad is None:
             grad = np.ones_like(self.data)

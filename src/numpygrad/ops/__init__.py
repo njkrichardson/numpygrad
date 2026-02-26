@@ -6,6 +6,7 @@ from numpygrad.ops.core import ArrayCoercible
 import numpygrad.ops.elementwise as elementwise
 import numpygrad.ops.reductions as reductions
 import numpygrad.ops.linalg as linalg
+import numpygrad.ops.transforms as transforms
 
 
 def add(a: ArrayCoercible, b: ArrayCoercible) -> Array:
@@ -28,6 +29,10 @@ def relu(a: ArrayCoercible) -> Array:
     return dispatch(OperatorId.RELU, a)
 
 
+def transpose(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
+    return dispatch(OperatorId.TRANSPOSE, a, axes=axes)
+
+
 matmul = mm
 
 
@@ -41,4 +46,6 @@ __all__ = [
     "mm",
     "matmul",
     "relu",
+    "transpose",
+    "transforms",
 ]

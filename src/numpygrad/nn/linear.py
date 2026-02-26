@@ -1,22 +1,20 @@
 from numpygrad.core.array import Array
+from numpygrad.core.array_creation import randn, zeros
 from numpygrad.nn.module import Module
-from numpygrad.nn.neuron import Neuron
 
 
 class Linear(Module):
     def __init__(self, num_inputs: int, num_outputs: int, **kwargs):
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
-        self.neurons = [Neuron(num_inputs, **kwargs) for _ in range(num_outputs)]
+        self.weight = randn((num_outputs, num_inputs), requires_grad=True)
+        self.bias = zeros(num_outputs, requires_grad=True)
 
-    def __call__(self, x: list[Array] | Array) -> list[Array] | Array:
-        out = [neuron(x) for neuron in self.neurons]
-        if len(out) == 1:
-            return out[0]
-        return out
+    def __call__(self, x: Array) -> Array:
+        return (x @ self.weight.T) + self.bias
 
     def parameters(self):
-        return [param for neuron in self.neurons for param in neuron.parameters()]
+        return [self.weight, self.bias]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(num_inputs={self.num_inputs}, num_outputs={self.num_outputs})"
