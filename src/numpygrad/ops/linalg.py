@@ -75,10 +75,10 @@ class Matmul(Function):
         grad_a = reduce_grad_to_shape(grad_a, a_shape)
         grad_b = reduce_grad_to_shape(grad_b, b_shape)
 
-        # squeeze back if original inputs were 1D
-        if len(a_shape) == 1:
+        # squeeze back if original inputs were 1D (only if we still have the added dim)
+        if len(a_shape) == 1 and grad_a.ndim >= 2 and grad_a.shape[0] == 1:
             grad_a = grad_a.squeeze(0)
-        if len(b_shape) == 1:
+        if len(b_shape) == 1 and grad_b.ndim >= 2 and grad_b.shape[-1] == 1:
             grad_b = grad_b.squeeze(-1)
 
         return grad_a, grad_b

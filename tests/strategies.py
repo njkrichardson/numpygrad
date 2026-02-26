@@ -30,8 +30,9 @@ def shape_nd(draw, min_num_dims: int = MIN_NUM_DIMS, max_num_dims: int = MAX_NUM
 
 
 @st.composite
-def generic_array(draw, dtypes=DTYPES):
-    shape = draw(shape_nd())
+def generic_array(draw, shape: tuple[int, ...] | None = None, dtypes=DTYPES):
+    if shape is None:
+        shape = draw(shape_nd())
     dtype = draw(st.sampled_from(dtypes))
     if np.issubdtype(dtype, np.integer):
         arr = npr.randint(*VALUE_RANGE, size=shape).astype(dtype)
@@ -41,7 +42,6 @@ def generic_array(draw, dtypes=DTYPES):
         raise ValueError
 
     return arr
-
 
 def _arrays(shapes: list[tuple[int, ...]], dtypes: list[np.dtype]):
     arrays = []
@@ -163,34 +163,12 @@ def mat_vec_pair(draw):
     (m, n) = draw(shape_nd(min_num_dims=2, max_num_dims=2))
     dtype = draw(st.sampled_from(DTYPES))
     return _arrays([(m, n), (n,)], [dtype, dtype])
-    # if np.issubdtype(dtype, np.integer):
-    #     A = npr.randint(*VALUE_RANGE, size=(m, n)).astype(dtype)
-    #     x = npr.randint(*VALUE_RANGE, size=(n,)).astype(dtype)
-    # elif np.issubdtype(dtype, np.floating):
-    #     A = FLOAT_DISTRIBUTION((m, n)).astype(dtype)
-    #     x = FLOAT_DISTRIBUTION((n,)).astype(dtype)
-    # else:
-    #     raise ValueError
-    #
-    # return (A, x)
-
 
 @st.composite
 def mat_mat_pair(draw):
     (m, k, n) = draw(shape_nd(min_num_dims=3, max_num_dims=3))
     dtype = draw(st.sampled_from(DTYPES))
     return _arrays([(m, k), (k, n)], [dtype, dtype])
-    # if np.issubdtype(dtype, np.integer):
-    #     A = npr.randint(*VALUE_RANGE, size=(m, k)).astype(dtype)
-    #     B = npr.randint(*VALUE_RANGE, size=(k, n)).astype(dtype)
-    # elif np.issubdtype(dtype, np.floating):
-    #     A = FLOAT_DISTRIBUTION((m, k)).astype(dtype)
-    #     B = FLOAT_DISTRIBUTION((k, n)).astype(dtype)
-    # else:
-    #     raise ValueError
-    #
-    # return (A, B)
-
 
 @st.composite
 def batch_mm(draw, dtypes=DTYPES):
