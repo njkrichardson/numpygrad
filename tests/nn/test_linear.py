@@ -87,6 +87,3 @@ def test_linear_backward(config):
     )[0]
     assert linear.weight.grad is not None
     check_equality(linear.weight.grad, gwt.detach().numpy())
-
-# config = ((2,), (1,))
-# test_linear_backward(config)

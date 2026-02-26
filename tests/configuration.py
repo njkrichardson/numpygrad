@@ -25,7 +25,7 @@ FP32_EQUAL_TOLERANCE = 1e-5
 FP64_EQUAL_TOLERANCE = 1e-12
 
 
-def check_equality(x: np.ndarray, desired: np.ndarray):
+def check_equality(x: np.ndarray, desired: np.ndarray, *, rtol: float | None = None, atol: float | None = None):
     if np.issubdtype(x.dtype, np.integer):
         np.testing.assert_array_equal(x, desired)
     elif np.issubdtype(x.dtype, np.floating):
@@ -36,6 +36,8 @@ def check_equality(x: np.ndarray, desired: np.ndarray):
             EQUAL_TOLERANCE = FP64_EQUAL_TOLERANCE
         else:
             raise ValueError(f"Unsupported dtype: {x.dtype}")
+        tol = rtol if rtol is not None else EQUAL_TOLERANCE
+        atol_ = atol if atol is not None else tol
         np.testing.assert_allclose(
-            x, desired, rtol=EQUAL_TOLERANCE, atol=EQUAL_TOLERANCE
+            x, desired, rtol=tol, atol=atol_
         )
