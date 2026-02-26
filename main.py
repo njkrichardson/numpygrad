@@ -26,16 +26,17 @@ def noise_power(signal: np.ndarray, snr_db: float) -> float:
 
 
 def main():
-    hidden_sizes = [16] * 8
+    hidden_sizes = [32] * 8
     input_dim = 1
     output_dim = 1
     net = MLP(input_dim, hidden_sizes, output_dim)
 
-    optimizer = npg.optim.SGD(net.parameters())
+    optimizer = npg.optim.SGD(net.parameters(), step_size=1e-1)
 
-    num_examples: int = 256
+    num_examples: int = 1_024
     inputs = np.linspace(-2 * np.pi, 2 * np.pi, num_examples).reshape(-1, 1)
-    snr_db = 20
+    inputs_norm = inputs / (2 * np.pi)
+    snr_db = 10
 
     targets = np.sin(inputs)
     noise = np.random.normal(
@@ -45,9 +46,9 @@ def main():
 
     def get_batch(batch_size: int):
         idx = np.random.choice(num_examples, batch_size, replace=False)
-        return npg.array(inputs[idx], requires_grad=True), npg.array(targets[idx])
+        return npg.array(inputs_norm[idx]), npg.array(targets[idx])
 
-    batch_size: int = num_examples
+    batch_size: int = 32
     num_steps: int = 20000
     report_every: int = 1000
 
@@ -60,15 +61,16 @@ def main():
         optimizer.step()
         if step % report_every == 0:
             print(
-                f"Step {step}: loss={mse(net(npg.array(inputs)), npg.array(targets)).data.item():.4f}"
+                f"Step {step}: loss={mse(net(npg.array(inputs_norm)), npg.array(targets)).data.item():.4f}"
             )
 
-    print("Final loss:", mse(net(npg.array(inputs)), npg.array(targets)).data)
+    print("Final loss:", mse(net(npg.array(inputs_norm)), npg.array(targets)).data)
 
-    _x = npg.array(np.linspace(-2 * np.pi, 2 * np.pi, 1000).reshape(-1, 1))
-    plt.figure(figsize=(14, 12))
+    _x_raw = np.linspace(-2 * np.pi, 2 * np.pi, 1000).reshape(-1, 1)
+    _x = npg.array(_x_raw / (2 * np.pi))
+    plt.figure(figsize=(18, 12))
     plt.scatter(inputs, targets, c="tab:blue")
-    plt.plot(_x.data, net(_x).data, c="tab:orange")
+    plt.plot(_x_raw, net(_x).data, c="tab:orange")
     plt.savefig(npg.configuration.MEDIA_DIR / "mlp_fit.png")
     plt.close()
 
