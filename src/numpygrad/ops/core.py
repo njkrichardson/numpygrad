@@ -1,12 +1,6 @@
-from typing import TypeAlias
-
 import numpy as np
 
-from numpygrad.core.array import Array
-
-ArrayCoercible: TypeAlias = (
-    np.ndarray | int | float | list[int | float] | tuple[int | float] | Array
-)
+from numpygrad.core.array import Array, ArrayCoercible
 
 
 def ensure_array(x: ArrayCoercible) -> Array:

@@ -6,6 +6,22 @@ import numpygrad as npg
 npg.manual_seed(0)
 
 
+def test_add_constant():
+    x = npg.ones(1)
+    z = x + 1
+
+    reference = np.ones(1) + 1
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_add_ndarray():
+    x = npg.ones(1)
+    z = x + np.array([2.0])
+
+    reference = np.ones(1) + np.array([2.0])
+    np.testing.assert_array_equal(z.data, reference)
+
+
 def test_add_basic():
     xshape = (2,)
     yshape = (2,)
@@ -51,6 +67,22 @@ def test_add_backward():
 
     np.testing.assert_array_equal(x.grad, gxt.numpy())
     np.testing.assert_array_equal(y.grad, gyt.numpy())
+
+
+def test_mul_constant():
+    x = npg.ones(1)
+    z = x * 2.0
+
+    reference = np.ones(1) * 2.0
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_mul_ndarray():
+    x = npg.ones(1)
+    z = x * np.array([2.0])
+
+    reference = np.ones(1) * np.array([2.0])
+    np.testing.assert_array_equal(z.data, reference)
 
 
 def test_mul_basic():

@@ -1,10 +1,10 @@
 import numpy as np
 
-from numpygrad.core.array import Array
+from numpygrad.core.array import Array, ArrayCoercible
 from numpygrad.core.registry import register, OperatorRequirements
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.function import Function, Context
-from numpygrad.ops.core import ArrayCoercible, ensure_array
+from numpygrad.ops.core import ensure_array
 from numpygrad.core.broadcasting import unbroadcast
 
 

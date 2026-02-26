@@ -1,4 +1,4 @@
-from typing import Any, TypeAlias, overload
+from typing import TypeAlias
 
 import numpy as np
 
@@ -6,26 +6,15 @@ from numpygrad.core.dispatch import dispatch
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.device import DeviceId
 
-ArrayConsumable: TypeAlias = (
-    np.ndarray | int | float | list[int | float] | tuple[int | float]
+ArrayCoercible: TypeAlias = (
+    "np.ndarray | int | float | list[int | float] | tuple[int | float] | Array"
 )
-
-
-def unbroadcast(grad, original_shape):
-    ndim_added = grad.ndim - len(original_shape)
-    for _ in range(ndim_added):
-        grad = grad.sum(axis=0)
-
-    for i, (og, _) in enumerate(zip(original_shape, grad.shape)):
-        if og == 1:
-            grad = grad.sum(axis=i, keepdims=True)
-    return grad
 
 
 class Array:
     def __init__(
         self,
-        data: ArrayConsumable,
+        data: ArrayCoercible,
         *,
         device: DeviceId | str = "cpu_np",
         requires_grad: bool = False,
@@ -63,11 +52,14 @@ class Array:
         out += ")"
         return out
 
-    def __mul__(self, other: "Array") -> "Array":
+    def __mul__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.MUL, self, other)
 
-    def __add__(self, other: "Array") -> "Array":
+    def __add__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.ADD, self, other)
+
+    def __rmul__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.MUL, self, other)
 
     def backward(self, grad: np.ndarray | None = None) -> None:
         if grad is None:
