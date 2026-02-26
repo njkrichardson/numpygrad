@@ -27,7 +27,7 @@ class Array:
         elif isinstance(data, np.ndarray):
             pass
 
-        self.data = data
+        self.data: np.ndarray = data  # type: ignore
         self.device: DeviceId = DeviceId(device)
         self.requires_grad = requires_grad
         self.grad = np.zeros_like(data) if requires_grad else None
@@ -73,6 +73,9 @@ class Array:
     def __truediv__(self, other: "int | float | Array | np.ndarray") -> "Array":
         return self * other**-1
 
+    def sum(self, axis=None, keepdims=False) -> "Array":
+        return dispatch(OperatorId.SUM, self, axis=axis, keepdims=keepdims)
+
     def backward(self, grad: np.ndarray | None = None) -> None:
         if grad is None:
             grad = np.ones_like(self.data)
@@ -84,7 +87,7 @@ class Array:
         def build(node):
             if node not in visited:
                 visited.add(node)
-                for parent in node.parents:
+                for parent in getattr(node, "parents", ()):
                     build(parent)
                 topo.append(node)
 
@@ -95,11 +98,11 @@ class Array:
 
         # backward pass
         for node in reversed(topo):
-            if node.grad_fn is None:
+            if getattr(node, "grad_fn", None) is None:
                 continue
 
             grads = node.grad_fn.backward(node.ctx, node.grad)
 
             for parent, parent_grad in zip(node.parents, grads):
-                if parent.requires_grad:
+                if getattr(parent, "requires_grad", False):
                     parent.grad += parent_grad

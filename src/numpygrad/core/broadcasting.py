@@ -29,3 +29,12 @@ def unbroadcast(grad: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
     )
 
     return grad
+
+
+def expand_to_shape(grad: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
+    """
+    Expand grad to target_shape by broadcasting.
+    """
+    if grad.shape != target_shape:
+        grad = np.broadcast_to(grad, target_shape)
+    return grad

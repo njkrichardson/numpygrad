@@ -224,3 +224,39 @@ def test_div_backward():
 
     np.testing.assert_array_equal(x.grad, gxt.numpy())
     np.testing.assert_array_equal(y.grad, gyt.numpy())
+
+
+def test_sum_basic():
+    xshape = (2,)
+    x = npg.ones(xshape)
+    z = x.sum()
+
+    reference = np.ones(xshape).sum()
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_sum_api():
+    xshape = (2,)
+    x = npg.ones(xshape)
+    z = npg.sum(x)
+
+    reference = np.ones(xshape).sum()
+    np.testing.assert_array_equal(z.data, reference)
+
+
+def test_sum_backward():
+    xshape = (2,)
+    x = npg.ones(xshape, requires_grad=True)
+    z = x.sum()
+    z.backward()
+
+    xt = torch.ones(xshape, requires_grad=True)
+    zt = xt.sum()
+
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+
+    np.testing.assert_array_equal(x.grad, gxt.numpy())

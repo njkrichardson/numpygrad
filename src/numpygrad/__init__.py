@@ -1,5 +1,5 @@
 from numpygrad.core import array, ndarray
-from numpygrad.ops import add, mul
+from numpygrad.ops import add, mul, sum
 from numpygrad.utils import io, Log
 import numpygrad.configuration as configuration
 import numpygrad.utils as utils
@@ -22,4 +22,5 @@ __all__ = [
     "optim",
     "add",
     "mul",
+    "sum",
 ]
