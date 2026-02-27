@@ -17,7 +17,8 @@ class CustomLogger:
 
         if not getattr(self._logger, "handler_set", None):
             format: str = "%(asctime)s %(levelname)s %(message)s"
-            fmt = logging.Formatter(format)
+            time_format: str = "%Y-%m-%d %H:%M:%S"
+            fmt = logging.Formatter(format, time_format)
 
             console = logging.StreamHandler()
             console.setLevel(stream_level)

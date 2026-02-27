@@ -47,8 +47,8 @@ print(x.grad)  # gradients of sum(x²) w.r.t. x
 net = MLP(input_dim=1, hidden_sizes=[8, 8], output_dim=1)
 optimizer = npg.optim.SGD(net.parameters(), step_size=1e-1)
 
-x = npg.array(np.random.randn(32, 1))
-targets = npg.array(np.random.randn(32, 1))
+x = npg.randn(32, 1)
+targets = npg.randn(32, 1)
 out = net(x)
 loss = ((out - targets) ** 2).mean()
 loss.backward()
