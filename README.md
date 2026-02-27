@@ -6,12 +6,12 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 
 - **NumPy-only** — Single dependency: NumPy. Runs anywhere Python runs.
 - **Define-by-run autograd** — Build a computation graph as you run ops; backward pass computes gradients via the chain rule.
-- **Familiar array API** — `npg.array` with `shape`, `ndim`, `dtype` 
-- **Familiar array creation** - `npg.ones`, `npg.arange`, `npg.randn`, etc.
-- **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`.
+- **Familiar array API** — `npg.array` with `shape`, `ndim`, `dtype` etc.
+- **Familiar array creation** - `ones`, `zeros`, `arange`, `randn`, etc.
+- **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`, `with ngp.no_grad():`, etc.
 - **Basic NN Modules and Optimizers** - `Linear`, `MLP`, `SGD`, etc.
 - **Broadcasting & batched ops** — Matmul, reductions, transforms, and elementwise ops support batched and broadcasted shapes.
-- **Familiar special methods** - `x[:, 2, ::2]`, `x @ y`, `x[x > 0] = 1.`, etc.
+- **Familiar special methods** - `x @ y`, `mask = x > 0`, etc.
 
 ## Installation
 
@@ -33,22 +33,21 @@ pip install -e ".[examples]"  # matplotlib for plotting
 ## Quick start
 
 ```python
-import numpy as np
-import numpygrad as npg
+import numpygrad as np # live on the edge! 
 from numpygrad.nn import MLP
 
 # Arrays and gradients
-x = npg.array([1.0, 2.0, 3.0], requires_grad=True)
+x = np.array([1.0, 2.0, 3.0], requires_grad=True)
 y = (x ** 2).sum()
 y.backward()
 print(x.grad)  # gradients of sum(x²) w.r.t. x
 
 # Small MLP
 net = MLP(input_dim=1, hidden_sizes=[8, 8], output_dim=1)
-optimizer = npg.optim.SGD(net.parameters(), step_size=1e-1)
+optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
 
-x = npg.randn(32, 1)
-targets = npg.randn(32, 1)
+x = np.randn(32, 1)
+targets = np.randn(32, 1)
 out = net(x)
 loss = ((out - targets) ** 2).mean()
 loss.backward()

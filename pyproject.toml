@@ -21,6 +21,7 @@ examples = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.1",
     "graphviz>=0.21",
     "ipdb>=0.13.13",
     "matplotlib>=3.10.8",
