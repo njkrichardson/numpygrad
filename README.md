@@ -1,4 +1,7 @@
 ![CI](https://github.com/njkrichardson/numpygrad/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![Ruff](https://img.shields.io/badge/lint-ruff-cc6600)
 
 # NumpyGrad
 
