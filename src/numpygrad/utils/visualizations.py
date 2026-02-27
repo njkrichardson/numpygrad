@@ -3,7 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import graphviz
+try:
+    import graphviz
+except ImportError:
+    graphviz = None  # type: ignore[assignment]
 
 from numpygrad.configuration import MEDIA_DIR
 from numpygrad.utils.io import now
@@ -32,6 +35,11 @@ def trace(
 
 
 def draw_computation_graph(root: Array, save_path: Path | None = None) -> None:
+    if graphviz is None:
+        raise ImportError(
+            "graphviz is required for draw_computation_graph. "
+            "Install it with: pip install graphviz (and ensure the graphviz system binary is on PATH)."
+        )
     dot = graphviz.Digraph(
         format="png", graph_attr={"rankdir": "LR", "size": "12,8!", "dpi": "150"}
     )
