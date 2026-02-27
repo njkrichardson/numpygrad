@@ -66,6 +66,9 @@ class Array:
     def size(self) -> int:
         return self.data.size
 
+    def item(self) -> float:
+        return self.data.item()
+
     def __repr__(self) -> str:
         out = f"Array(data={self.data}"
         if self.requires_grad:

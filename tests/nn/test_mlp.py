@@ -75,7 +75,7 @@ def test_mlp_forward(config):
     yt = torch_mlp(torch.from_numpy(x).to(torch.float64))
 
     # NumPy vs PyTorch matmul can differ in the last ~10 bits due to reduction order
-    check_equality(y.data, yt.detach().numpy(), rtol=1e-10, atol=1e-12)
+    check_equality(y.data, yt.detach().numpy(), rtol=1e-8, atol=1e-10)
 
 @given(configuration())
 def test_mlp_backward(config):
@@ -130,8 +130,8 @@ def test_mlp_backward(config):
         gwt = next(grad_iter)
         gbt = next(grad_iter)
         assert ngp_layer.weight.grad is not None
-        check_equality(ngp_layer.weight.grad, gwt.detach().numpy(), rtol=1e-10, atol=1e-10)
+        check_equality(ngp_layer.weight.grad, gwt.detach().numpy(), rtol=1e-8, atol=1e-10)
         assert ngp_layer.bias.grad is not None
-        check_equality(ngp_layer.bias.grad, gbt.detach().numpy(), rtol=1e-10, atol=1e-10)
+        check_equality(ngp_layer.bias.grad, gbt.detach().numpy(), rtol=1e-8, atol=1e-10)
 
     

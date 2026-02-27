@@ -2,15 +2,14 @@ import argparse
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 
-import numpygrad as npg
+import numpygrad as np
 import numpygrad.nn as nn 
 from numpygrad.utils.data import DataLoader
 from examples.regression_1d.data import RegressionDataset
 
-npg.manual_seed(0)
-Log = npg.Log(__name__)
+np.manual_seed(0)
+Log = np.Log(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--create-plot", action="store_true")
@@ -30,7 +29,7 @@ def main(args: argparse.Namespace):
     output_dim = args.output_dim
 
     net = nn.MLP(input_dim, hidden_sizes, output_dim)
-    optimizer = npg.optim.SGD(net.parameters(), step_size=1e-1)
+    optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
 
     dataset = RegressionDataset(args.num_examples, args.snr_db)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
@@ -43,7 +42,7 @@ def main(args: argparse.Namespace):
             L = nn.mse(out, y)
             losses.append(L.data.item())
         optimizer.zero_grad()
-        return np.mean(losses)
+        return np.mean(np.array(losses)).item()
 
     for step in range(args.num_steps):
         x, y = next(iter(dataloader))
@@ -60,7 +59,7 @@ def main(args: argparse.Namespace):
     Log.info(f"Final loss: {estimate_loss(args.num_estimate_loss_batches):.4f}")
 
     if args.create_plot:
-        save_path = npg.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png"
+        save_path = np.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png"
         plt.figure(figsize=(18, 10))
         plt.scatter(dataset.inputs_unnormalized, dataset.targets.data, c="tab:blue", alpha=0.5)
         plt.plot(dataset.inputs_unnormalized, net(dataset.data).data, c="tab:orange", linewidth=3)
