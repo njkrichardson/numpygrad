@@ -7,6 +7,12 @@ def dispatch(op_id: OperatorId, *args, **kwargs):
     from numpygrad.core.array import Array
 
     arrays = [x for x in args if isinstance(x, Array)]
+    if not arrays and "arrays" in kwargs:
+        arrays_arg = kwargs["arrays"]
+        if isinstance(arrays_arg, (list, tuple)):
+            arrays = [x for x in arrays_arg if isinstance(x, Array)]
+        elif isinstance(arrays_arg, Array):
+            arrays = [arrays_arg]
     device: DeviceId = arrays[0].device
     requires_grad = any(array.requires_grad for array in arrays)
     direction = (

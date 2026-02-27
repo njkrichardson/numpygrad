@@ -170,6 +170,14 @@ def mat_mat_pair(draw):
     dtype = draw(st.sampled_from(DTYPES))
     return _arrays([(m, k), (k, n)], [dtype, dtype])
 
+
+@st.composite
+def dot_1d_pair(draw, dtypes=DTYPES):
+    """Two 1D arrays of the same length for np.dot(a, b) (inner product)."""
+    n = draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
+    dtype = draw(st.sampled_from(dtypes))
+    return _arrays([(n,), (n,)], [dtype, dtype])
+
 @st.composite
 def batch_mm(draw, dtypes=DTYPES):
     return draw(
@@ -177,3 +185,178 @@ def batch_mm(draw, dtypes=DTYPES):
             min_dims=1, max_dims=5, mm_broadcastable=True, dtypes=dtypes
         )
     )
+
+
+@st.composite
+def positive_array(draw, shape: tuple[int, ...] | None = None, dtypes=FLOAT_DTYPES):
+    """Array with strictly positive values (e.g. for log)."""
+    if shape is None:
+        shape = draw(shape_nd(min_num_dims=1))  # avoid 0-dim (scalar) for torch compat
+        if isinstance(shape, int):
+            shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    return np.abs(arr) + 1e-6
+
+
+@st.composite
+def prod_safe_array(draw, shape: tuple[int, ...] | None = None, dtypes=FLOAT_DTYPES):
+    """Array with values in (0.1, 1.0] so that product over many elements does not overflow."""
+    if shape is None:
+        shape = draw(shape_nd(min_num_dims=1))
+        if isinstance(shape, int):
+            shape = (shape,)
+    dtype = draw(st.sampled_from(dtypes))
+    return npr.uniform(0.1, 1.0, size=shape).astype(dtype)
+
+
+def axes_permutation(ndim: int):
+    """Strategy that returns a permutation of range(ndim)."""
+    return st.permutation(list(range(ndim))).map(tuple)
+
+
+@st.composite
+def reshape_shape(draw, shape: tuple[int, ...]):
+    """Strategy that returns a new shape with same total size as shape."""
+    size = int(np.prod(shape))
+    if size == 0:
+        return shape
+    ndim = len(shape)
+    # Simple options: same, reversed, or flattened
+    options = [shape, tuple(reversed(shape)), (size,)]
+    if ndim == 2:
+        options.append((shape[1], shape[0]))
+    return draw(st.sampled_from(options))
+
+
+@st.composite
+def slice_key(draw, shape: tuple[int, ...]):
+    """Strategy that returns a valid indexing key for the given shape."""
+    if len(shape) == 0:
+        return ()
+    keys = []
+    for s in shape:
+        key = draw(
+            st.one_of(
+                st.integers(0, max(0, s - 1)),
+                st.slices(s),
+            )
+        )
+        keys.append(key)
+    return tuple(keys)
+
+
+@st.composite
+def slice_key_positive_step(draw, shape: tuple[int, ...]):
+    """Indexing key that only uses integer or slice with step=1 (torch-compatible)."""
+    if len(shape) == 0:
+        return ()
+    keys = []
+    for s in shape:
+        key = draw(
+            st.one_of(
+                st.integers(0, max(0, s - 1)),
+                st.just(slice(None)),
+                st.builds(
+                    lambda start, stop: slice(start, stop),
+                    st.integers(0, max(0, s - 1)),
+                    st.integers(1, max(1, s)),
+                ).filter(lambda sl: sl.start < sl.stop),
+            )
+        )
+        keys.append(key)
+    return tuple(keys)
+
+
+@st.composite
+def stack_arrays(draw, n: int = 2, min_dims=MIN_NUM_DIMS, max_dims=MAX_NUM_DIMS, dtypes=DTYPES):
+    """Strategy that returns (arrays_tuple, axis) for npg.stack."""
+    shape = draw(shape_nd(min_num_dims=min_dims, max_num_dims=max_dims))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arrays = _arrays([shape] * n, [draw(st.sampled_from(dtypes))] * n)
+    axis = draw(st.integers(0, len(shape)))
+    return arrays, axis
+
+
+@st.composite
+def cat_arrays(draw, n: int = 2, min_dims=1, max_dims=MAX_NUM_DIMS, dtypes=DTYPES):
+    """Strategy that returns (arrays_tuple, axis) for npg.cat."""
+    ndim = draw(st.integers(min_value=min_dims, max_value=max_dims))
+    axis = draw(st.integers(0, ndim - 1))
+    base_shape = tuple(
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
+        for _ in range(ndim)
+    )
+    dtype = draw(st.sampled_from(dtypes))
+    sizes_on_axis = [
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
+        for _ in range(n)
+    ]
+    shapes = [
+        tuple(base_shape[j] if j != axis else sizes_on_axis[i] for j in range(ndim))
+        for i in range(n)
+    ]
+    return _arrays(shapes, [dtype] * n), axis
+
+
+@st.composite
+def reduction_args(draw, dtypes=DTYPES, with_axis=True):
+    """Strategy yielding (arr, axis, keepdims) for reduction ops. arr has ndim >= 1."""
+    shape = draw(shape_nd(min_num_dims=1))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    ndim = len(shape)
+    if with_axis:
+        axis = draw(st.one_of(st.none(), st.integers(0, ndim - 1)))
+    else:
+        axis = None
+    keepdims = draw(st.booleans())
+    return arr, axis, keepdims
+
+
+@st.composite
+def transpose_args(draw, dtypes=DTYPES):
+    """Strategy yielding (arr, axes) for transpose. arr has ndim >= 1."""
+    shape = draw(shape_nd(min_num_dims=1))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    axes = tuple(draw(st.permutations(list(range(len(shape))))))
+    return arr, axes
+
+
+@st.composite
+def reshape_args(draw, dtypes=DTYPES):
+    """Strategy yielding (arr, new_shape) for reshape. new_shape has same size as arr."""
+    shape = draw(shape_nd(min_num_dims=1))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    new_shape = draw(reshape_shape(shape))
+    return arr, new_shape
+
+
+@st.composite
+def slice_args(draw, dtypes=DTYPES, allow_negative_step=True):
+    """Strategy yielding (arr, key) for slice. key is valid for arr.shape."""
+    shape = draw(shape_nd(min_num_dims=1))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    key = draw(
+        slice_key(shape) if allow_negative_step else slice_key_positive_step(shape)
+    )
+    return arr, key
+
+
+@st.composite
+def unsqueeze_args(draw, dtypes=DTYPES):
+    """Strategy yielding (arr, axis) for unsqueeze. axis in 0..ndim inclusive."""
+    shape = draw(shape_nd(min_num_dims=1))
+    if isinstance(shape, int):
+        shape = (shape,)
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    ndim = len(shape)
+    axis = draw(st.integers(0, ndim))
+    return arr, axis

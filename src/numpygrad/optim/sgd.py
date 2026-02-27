@@ -9,4 +9,5 @@ class SGD(Optimizer):
 
     def step(self) -> None:
         for param in self.params:
+            assert param.grad is not None
             param.data -= self.step_size * param.grad

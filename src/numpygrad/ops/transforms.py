@@ -1,11 +1,12 @@
 import numpy as np
+from typing import Union
 
 from numpygrad.core.array import Array, ArrayCoercible
 from numpygrad.core.registry import register, OperatorRequirements
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.function import Function, Context
 from numpygrad.ops.core import ensure_array
-
+from numpygrad.core.broadcasting import unbroadcast
 
 @register(OperatorId.TRANSPOSE)
 def tranpose_cpu(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
@@ -78,11 +79,12 @@ def reshape_autograd(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Arr
     return Reshape.apply(a, new_shape)
 
 
-def normalize_key(key):
+def normalize_key(key: "ArrayCoercible | slice | tuple[slice, ...]") -> np.ndarray | tuple[np.ndarray, ...]:
     if isinstance(key, Array):
         return key.data
     elif isinstance(key, tuple):
         return tuple(normalize_key(k) for k in key)
+
     return key
 
 
@@ -123,3 +125,140 @@ class Slice(Function):
 @register(OperatorId.SLICE, op_requirements=OperatorRequirements.Autograd)
 def slice_autograd(a: ArrayCoercible, key) -> Array:
     return Slice.apply(a, key)
+
+@register(OperatorId.UNSQUEEZE)
+def unsqueeze_cpu(a: ArrayCoercible, axis: int) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.expand_dims(a.data, axis=axis),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Unsqueeze(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, axis: int) -> Array:
+        a = ensure_array(a)
+        ctx.axis = axis
+
+        return Array(
+            np.expand_dims(a.data, axis=axis),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        return np.squeeze(grad, axis=ctx.axis), None
+
+@register(OperatorId.UNSQUEEZE, op_requirements=OperatorRequirements.Autograd)
+def unsqueeze_autograd(a: ArrayCoercible, axis: int) -> Array:
+    return Unsqueeze.apply(a, axis)
+
+
+@register(OperatorId.FLATTEN)
+def flatten_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.ravel(a.data),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Flatten(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+
+        return Array(
+            np.ravel(a.data),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        a = ctx.saved_arrays[0]
+        return np.reshape(grad, shape=a.shape), None
+
+@register(OperatorId.FLATTEN, op_requirements=OperatorRequirements.Autograd)
+def flatten_autograd(a: ArrayCoercible) -> Array:
+    return Flatten.apply(a)
+
+@register(OperatorId.STACK)
+def stack_cpu(arrays: tuple[ArrayCoercible, ...], axis: int=0) -> Array:
+    arrays = tuple(ensure_array(a) for a in arrays)
+    return Array(
+        np.stack([a.data for a in arrays], axis=axis),
+        device="cpu_np",
+        requires_grad=any(a.requires_grad for a in arrays),
+    )
+class Stack(Function):
+    @staticmethod
+    def forward(ctx: Context, *arrays_and_axis: Union[ArrayCoercible, int]) -> Array:
+        *array_args, axis = arrays_and_axis
+        arrays = tuple(ensure_array(a) for a in array_args)
+        ctx.axis = axis
+        ctx.num_arrays = len(arrays)
+        ctx.original_shapes = tuple(a.shape for a in arrays)
+
+        data = [a.data for a in arrays]
+        out = np.stack(data, axis=axis)
+        return Array(
+            out,
+            device=arrays[0].device,
+            requires_grad=any(a.requires_grad for a in arrays),
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        axis = ctx.axis
+        splits = np.split(grad, ctx.num_arrays, axis=axis)
+        # Each split has an extra dimension at axis; squeeze it to match input shape.
+        return *tuple(np.squeeze(split, axis=axis) for split in splits), None
+
+
+@register(OperatorId.STACK, op_requirements=OperatorRequirements.Autograd)
+def stack_autograd(arrays: tuple[ArrayCoercible, ...], axis: int=0) -> Array:
+    return Stack.apply(*arrays, axis)
+
+@register(OperatorId.CAT)
+def cat_cpu(arrays: tuple[ArrayCoercible, ...], axis: int=0) -> Array:
+    arrays = tuple(ensure_array(a) for a in arrays)
+    return Array(
+        np.concatenate([a.data for a in arrays], axis=axis),
+        device="cpu_np",
+        requires_grad=any(a.requires_grad for a in arrays),
+    )
+
+class Cat(Function):
+    @staticmethod
+    def forward(ctx: Context, *arrays_and_axis: Union[ArrayCoercible, int]) -> Array:
+        *array_args, axis = arrays_and_axis
+        arrays = tuple(ensure_array(a) for a in array_args)
+        ctx.axis = axis
+        ctx.sizes = tuple(a.shape[axis] for a in arrays)
+        ctx.original_shapes = tuple(a.shape for a in arrays)
+
+        data = [a.data for a in arrays]
+        out = np.concatenate(data, axis=axis)
+        return Array(
+            out,
+            device=arrays[0].device,
+            requires_grad=any(a.requires_grad for a in arrays),
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        axis = ctx.axis
+        sizes = ctx.sizes
+        splits = np.split(grad, np.cumsum(sizes)[:-1], axis=axis)
+        return *tuple(unbroadcast(split, shape) for split, shape in zip(splits, ctx.original_shapes)), None
+
+
+@register(OperatorId.CAT, op_requirements=OperatorRequirements.Autograd)
+def cat_autograd(arrays: tuple[ArrayCoercible, ...], axis: int=0) -> Array:
+    return Cat.apply(*arrays, axis)

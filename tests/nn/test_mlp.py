@@ -5,6 +5,12 @@ import torch
 import numpygrad as npg
 from numpygrad.nn.mlp import MLP
 
+def _linear_modules(sequential):
+    """Collect Linear submodules from a Sequential in order. Linears are at indices 0, 2, 4, ... (ReLU at 1, 3, ...)."""
+    modules = list(sequential._modules.values())
+    # Sequential is [Linear, ReLU, Linear, ReLU, ..., Linear]
+    return [modules[i] for i in range(0, len(modules), 2)]
+
 from tests.configuration import (
     check_equality,
     FLOAT_DISTRIBUTION,
@@ -37,17 +43,17 @@ def test_mlp_forward(config):
     hidden_sizes = [int(size) for size in hidden_sizes]
     mlp = MLP(num_inputs, hidden_sizes, num_outputs)
 
-    layers = [] 
+    layers = []
     sizes = [num_inputs] + hidden_sizes + [num_outputs]
     for in_dim, out_dim in zip(sizes[:-1], sizes[1:]):
         weight = FLOAT_DISTRIBUTION((out_dim, in_dim)).astype(np.float64)
         bias = FLOAT_DISTRIBUTION((out_dim,)).astype(np.float64)
         layers.append((weight, bias))
 
-    for i, layer in enumerate(mlp.layers):
-        weight, bias = layers[i]
-        layer.weight = npg.array(weight)
-        layer.bias = npg.array(bias)
+    linears = _linear_modules(mlp.layers)
+    for i, (weight, bias) in enumerate(layers):
+        linears[i].weight.data = weight
+        linears[i].bias.data = bias
 
     class TorchMLP(torch.nn.Module):
         def __init__(self):
@@ -78,17 +84,17 @@ def test_mlp_backward(config):
     hidden_sizes = [int(size) for size in hidden_sizes]
     mlp = MLP(num_inputs, hidden_sizes, num_outputs)
 
-    layers = [] 
+    layers = []
     sizes = [num_inputs] + hidden_sizes + [num_outputs]
     for in_dim, out_dim in zip(sizes[:-1], sizes[1:]):
         weight = FLOAT_DISTRIBUTION((out_dim, in_dim)).astype(np.float64)
         bias = FLOAT_DISTRIBUTION((out_dim,)).astype(np.float64)
         layers.append((weight, bias))
 
-    for i, layer in enumerate(mlp.layers):
-        weight, bias = layers[i]
-        layer.weight = npg.array(weight, requires_grad=True)
-        layer.bias = npg.array(bias, requires_grad=True)
+    linears = _linear_modules(mlp.layers)
+    for i, (weight, bias) in enumerate(layers):
+        linears[i].weight.data = weight
+        linears[i].bias.data = bias
 
     class TorchMLP(torch.nn.Module):
         def __init__(self):
@@ -120,7 +126,7 @@ def test_mlp_backward(config):
         grad_outputs=torch.ones_like(yt),
     )
     grad_iter = iter(grad_outs)
-    for ngp_layer, torch_layer in zip(mlp.layers, torch_mlp.layers):
+    for ngp_layer, torch_layer in zip(linears, torch_mlp.layers):
         gwt = next(grad_iter)
         gbt = next(grad_iter)
         assert ngp_layer.weight.grad is not None

@@ -60,12 +60,15 @@ def main(args: argparse.Namespace):
     Log.info(f"Final loss: {estimate_loss(args.num_estimate_loss_batches):.4f}")
 
     if args.create_plot:
+        save_path = npg.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png"
         plt.figure(figsize=(18, 10))
         plt.scatter(dataset.inputs_unnormalized, dataset.targets.data, c="tab:blue", alpha=0.5)
         plt.plot(dataset.inputs_unnormalized, net(dataset.data).data, c="tab:orange", linewidth=3)
         plt.tight_layout()
-        plt.savefig(npg.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png")
+        plt.savefig(save_path)
         plt.close()
+        Log.info(f"Plot saved to {save_path}")
+
 
 if __name__ == "__main__":
     args = parser.parse_args()

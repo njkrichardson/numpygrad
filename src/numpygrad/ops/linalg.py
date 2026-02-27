@@ -43,6 +43,11 @@ class Matmul(Function):
 
         # forward matmul (NumPy handles broadcasting in batch dims)
         out_data = np.matmul(a_data, b_data)
+        # restore 1D output when we had 1D input (match NumPy/PyTorch semantics)
+        if ctx.squeeze_a and out_data.shape[0] == 1:
+            out_data = out_data.squeeze(0)
+        if ctx.squeeze_b and out_data.shape[-1] == 1:
+            out_data = out_data.squeeze(-1)
         return Array(out_data, device=a.device, requires_grad=True)
 
     @staticmethod
@@ -87,3 +92,67 @@ class Matmul(Function):
 @register(OperatorId.MATMUL, op_requirements=OperatorRequirements.Autograd)
 def mul_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Matmul.apply(a, b)
+
+@register(OperatorId.DOT)
+def dot_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
+    a, b = ensure_array(a), ensure_array(b)
+    return Array(
+        np.dot(a.data, b.data),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+class Dot(Function):
+    @staticmethod
+    def forward(ctx, a: Array, b: Array) -> Array:
+        ctx.store(a, b)
+        return Array(np.dot(a.data, b.data), device=a.device, requires_grad=True)
+
+    @staticmethod
+    def backward(ctx, grad_out: np.ndarray):
+        a, b = ctx.saved_arrays
+        grad_a = grad_out * b.data
+        grad_b = grad_out * a.data
+        return grad_a, grad_b
+
+@register(OperatorId.DOT, op_requirements=OperatorRequirements.Autograd)
+def dot_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
+    return Dot.apply(a, b)
+
+@register(OperatorId.NORM)
+def norm_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.linalg.norm(a.data, axis=axis, keepdims=keepdims),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+class Norm(Function):
+    @staticmethod
+    def forward(ctx, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
+        out = np.linalg.norm(a.data, axis=axis, keepdims=keepdims)
+        ctx.store(a, out)
+        ctx.axis = axis
+        ctx.keepdims = keepdims
+        return Array(out, device=a.device, requires_grad=True)
+
+    @staticmethod
+    def backward(ctx, grad_out: np.ndarray):
+        a, out = ctx.saved_arrays
+        axis = ctx.axis
+        keepdims = ctx.keepdims
+
+        # out is the raw ndarray from np.linalg.norm
+        out_val = out.data if hasattr(out, "data") else out
+        norm_safe = np.where(out_val == 0, 1, out_val)
+        if not keepdims and axis is not None:
+            grad_out = np.expand_dims(grad_out, axis=axis)
+            norm_safe = np.expand_dims(norm_safe, axis=axis)
+        grad_a = (grad_out / norm_safe) * a.data
+        return grad_a, None, None
+
+
+@register(OperatorId.NORM, op_requirements=OperatorRequirements.Autograd)
+def norm_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
+    return Norm.apply(a, axis, keepdims)

@@ -8,6 +8,7 @@ from tests.strategies import (
     generic_array,
     shape_nd,
     array_pair,
+    positive_array,
     FLOAT_DTYPES,
 )
 from tests.configuration import (
@@ -324,3 +325,273 @@ def test_relu_backward(arr: np.ndarray):
     )[0]
     assert x.grad is not None
     check_equality(x.grad, gxt.numpy())
+
+
+# --- exp ---
+
+
+@given(generic_array())
+def test_exp_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.exp()
+    reference = np.exp(arr)
+    check_equality(z.data, reference)
+
+
+@given(generic_array())
+def test_exp_api(arr: np.ndarray):
+    x = npg.array(arr)
+    z = npg.exp(x)
+    reference = np.exp(arr)
+    check_equality(z.data, reference)
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_exp_backward(arr: np.ndarray):
+    x = npg.array(arr, requires_grad=True)
+    z = x.exp()
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    zt = xt.exp()
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
+
+
+# --- log ---
+
+
+@given(positive_array())
+def test_log_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.log()
+    reference = np.log(arr)
+    check_equality(z.data, reference)
+
+
+@given(positive_array())
+def test_log_api(arr: np.ndarray):
+    x = npg.array(arr)
+    z = npg.log(x)
+    reference = np.log(arr)
+    check_equality(z.data, reference)
+
+
+@given(positive_array())
+def test_log_backward(arr: np.ndarray):
+    x = npg.array(arr, requires_grad=True)
+    z = x.log()
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    zt = xt.log()
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
+
+
+# --- abs ---
+
+
+@given(generic_array())
+def test_abs_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.abs()
+    reference = np.abs(arr)
+    check_equality(z.data, reference)
+
+
+@given(generic_array())
+def test_abs_api(arr: np.ndarray):
+    x = npg.array(arr)
+    z = npg.abs(x)
+    reference = np.abs(arr)
+    check_equality(z.data, reference)
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_abs_backward(arr: np.ndarray):
+    x = npg.array(arr, requires_grad=True)
+    z = x.abs()
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    zt = xt.abs()
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
+
+
+# --- clip ---
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_clip_basic(arr: np.ndarray):
+    low = float(np.min(arr)) - 1.0
+    high = float(np.max(arr)) + 1.0
+    x = npg.array(arr)
+    z = npg.clip(x, low, high)
+    reference = np.clip(arr, low, high)
+    check_equality(z.data, reference)
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_clip_backward(arr: np.ndarray):
+    low = float(np.min(arr)) - 1.0
+    high = float(np.max(arr)) + 1.0
+    x = npg.array(arr, requires_grad=True)
+    z = npg.clip(x, low, high)
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    zt = torch.clamp(xt, low, high)
+    gxt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt,),
+        grad_outputs=torch.ones_like(zt),
+    )[0]
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
+
+
+# --- maximum ---
+
+
+@given(array_pair(same_shape=True))
+def test_maximum_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
+    z = npg.maximum(x, y)
+    reference = np.maximum(A, B)
+    check_equality(z.data, reference)
+
+
+@given(array_pair(broadcastable=True))
+def test_maximum_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
+    z = npg.maximum(x, y)
+    reference = np.maximum(A, B)
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True, dtypes=FLOAT_DTYPES))
+def test_maximum_backward_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = npg.maximum(x, y)
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = torch.maximum(xt, yt)
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+@given(array_pair(broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_maximum_backward_bcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = npg.maximum(x, y)
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = torch.maximum(xt, yt)
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+# --- minimum ---
+
+
+@given(array_pair(same_shape=True))
+def test_minimum_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
+    z = npg.minimum(x, y)
+    reference = np.minimum(A, B)
+    check_equality(z.data, reference)
+
+
+@given(array_pair(broadcastable=True))
+def test_minimum_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A)
+    y = npg.array(B)
+    z = npg.minimum(x, y)
+    reference = np.minimum(A, B)
+    check_equality(z.data, reference)
+
+
+@given(array_pair(same_shape=True, dtypes=FLOAT_DTYPES))
+def test_minimum_backward_basic(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = npg.minimum(x, y)
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = torch.minimum(xt, yt)
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+@given(array_pair(broadcastable=True, dtypes=FLOAT_DTYPES))
+def test_minimum_backward_bcast(arrs: tuple[np.ndarray, np.ndarray]):
+    A, B = arrs
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = npg.minimum(x, y)
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = torch.minimum(xt, yt)
+    gxt, gyt = torch.autograd.grad(
+        outputs=zt,
+        inputs=(xt, yt),
+        grad_outputs=torch.ones_like(zt),
+    )
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())

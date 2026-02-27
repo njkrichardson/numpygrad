@@ -7,9 +7,8 @@ from numpygrad.core.opid import OperatorId
 from numpygrad.core.device import DeviceId
 
 ArrayCoercible: TypeAlias = (
-    "np.ndarray | int | float | list[int | float] | tuple[int | float] | Array"
+    "np.ndarray | int | float | list[int | float] | tuple[int | float] | Array | tuple[int, ...]"
 )
-
 
 class Array:
     def __init__(
@@ -27,12 +26,18 @@ class Array:
             data = np.array(data)
         elif isinstance(data, np.ndarray):
             pass
+        elif isinstance(data, Array):
+            # Unwrap so self.data is always ndarray and zeros_like(grad) gets correct shape
+            data = data.data
 
         self.data: np.ndarray = data  # type: ignore
         if dtype is not None:
             self.data = self.data.astype(dtype)
 
         self.device: DeviceId = DeviceId(device)
+
+        if self.dtype != np.float32 and self.dtype != np.float64 and requires_grad:
+            raise ValueError("Only arrays of floating point dtype can require gradients")
         self.requires_grad = requires_grad
         self.grad = np.zeros_like(self.data) if requires_grad else None
 
@@ -74,6 +79,27 @@ class Array:
 
     def __getitem__(self, key) -> "Array":
         return dispatch(OperatorId.SLICE, self, key=key)
+
+    def __setitem__(
+        self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible
+    ) -> None:
+        # In-place mutation on Arrays that participate in autograd is not supported.
+        # Use the functional setitem op instead (numpygrad.ops.setitem or Array.setitem).
+        from numpygrad.ops.core import ensure_array  # local import to avoid circular dependency
+
+        if self.requires_grad or ensure_array(value).requires_grad:
+            raise RuntimeError(
+                "__setitem__ on Arrays that require grad is not supported; "
+                "use a functional setitem operation instead."
+            )
+
+        result = dispatch(OperatorId.SETITEM, self, key, value)
+        self.data = result.data
+
+    def setitem(
+        self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible
+    ):
+        return dispatch(OperatorId.SETITEM, self, key, value)
 
     def __gt__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.GT, self, other)
@@ -120,6 +146,15 @@ class Array:
     def sum(self, axis=None, keepdims=False) -> "Array":
         return dispatch(OperatorId.SUM, self, axis=axis, keepdims=keepdims)
 
+    def exp(self) -> "Array":
+        return dispatch(OperatorId.EXP, self)
+
+    def log(self) -> "Array":
+        return dispatch(OperatorId.LOG, self)
+
+    def abs(self) -> "Array":
+        return dispatch(OperatorId.ABS, self)
+
     def transpose(self, axes: tuple[int, ...]) -> "Array":
         return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
 
@@ -135,6 +170,26 @@ class Array:
         self, axis: tuple[int, ...] | int | None = None, keepdims: bool = False
     ) -> "Array":
         return dispatch(OperatorId.MEAN, self, axis=axis, keepdims=keepdims)
+
+    def max(
+        self, axis: int | None = None, keepdims: bool = False
+    ) -> "Array":
+        return dispatch(OperatorId.MAX, self, axis=axis, keepdims=keepdims)
+
+    def min(
+        self, axis: int | None = None, keepdims: bool = False
+    ) -> "Array":
+        return dispatch(OperatorId.MIN, self, axis=axis, keepdims=keepdims)
+
+    def prod(
+        self, axis: int | None = None, keepdims: bool = False
+    ) -> "Array":
+        return dispatch(OperatorId.PRODUCT, self, axis=axis, keepdims=keepdims)
+
+    def argmax(
+        self, axis: int | None = None, keepdims: bool = False
+    ) -> "Array":
+        return dispatch(OperatorId.ARGMAX, self, axis=axis, keepdims=keepdims)
 
     @property
     def T(self) -> "Array":

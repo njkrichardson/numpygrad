@@ -32,6 +32,7 @@ def configuration(draw):
     output_shape = tuple(batch_dim_sizes) + (num_outputs,)
     return input_shape, output_shape
 
+
 @given(configuration())
 def test_linear_forward(config):
     input_shape, output_shape = config
@@ -41,7 +42,8 @@ def test_linear_forward(config):
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=False)
     torch_linear.weight.data = torch.from_numpy(weight)
     linear = Linear(num_inputs, num_outputs)
-    linear.weight = npg.array(weight)
+    linear.weight.data = weight
+    linear.bias.data = np.zeros(num_outputs)
 
     x = FLOAT_DISTRIBUTION(input_shape).astype(np.float64)
     y = linear(npg.array(x))
@@ -54,12 +56,12 @@ def test_linear_forward(config):
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=True)
     torch_linear.weight.data = torch.from_numpy(weight)
     torch_linear.bias.data = torch.from_numpy(bias)
-    linear = Linear(num_inputs, num_outputs)
-    linear.weight = npg.array(weight)
-    linear.bias = npg.array(bias)
+    linear2 = Linear(num_inputs, num_outputs)
+    linear2.weight.data = weight
+    linear2.bias.data = bias
 
     x = FLOAT_DISTRIBUTION(input_shape).astype(np.float64)
-    y = linear(npg.array(x))
+    y = linear2(npg.array(x))
     yt = torch_linear(torch.from_numpy(x))
 
     check_equality(y.data, yt.detach().numpy())
@@ -73,7 +75,8 @@ def test_linear_backward(config):
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=False)
     torch_linear.weight.data = torch.from_numpy(weight)
     linear = Linear(num_inputs, num_outputs)
-    linear.weight = npg.array(weight, requires_grad=True)
+    linear.weight.data = weight
+    linear.bias.data = np.zeros(num_outputs)
 
     x = FLOAT_DISTRIBUTION(input_shape).astype(np.float64)
     y = linear(npg.array(x))

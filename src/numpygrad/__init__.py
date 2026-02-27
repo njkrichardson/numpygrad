@@ -1,5 +1,34 @@
 from numpygrad.core import array, ndarray
-from numpygrad.ops import add, mul, sum, mm, matmul, relu, mean
+from numpygrad.core.dtypes import float32, float64, int32, int64
+from numpygrad.ops import (
+    add,
+    mul,
+    sum,
+    mm,
+    matmul,
+    relu,
+    mean,
+    prod,
+    min,
+    max,
+    argmax,
+    dot,
+    flatten,
+    unsqueeze,
+    reshape,
+    transpose,
+    norm,
+    maximum,
+    minimum,
+    exp,
+    pow,
+    log,
+    abs,
+    clip,
+    stack,
+    cat,
+    setitem,
+)
 from numpygrad.utils import io, Log
 import numpygrad.configuration as configuration
 import numpygrad.utils as utils
@@ -13,6 +42,7 @@ from numpygrad.core.array_creation import (
     randint,
 )
 import numpygrad.optim as optim
+from numpygrad.core.contexts import no_grad
 
 __all__ = [
     "array",
@@ -26,6 +56,10 @@ __all__ = [
     "zeros",
     "ones",
     "zeros_like",
+    "exp",
+    "pow",
+    "log",
+    "abs",
     "optim",
     "add",
     "mul",
@@ -34,6 +68,27 @@ __all__ = [
     "matmul",
     "relu",
     "mean",
+    "clip",
     "arange",
     "randint",
+    "maximum",
+    "minimum",
+    "float32",
+    "float64",
+    "int32",
+    "int64",
+    "prod",
+    "min",
+    "max",
+    "argmax",
+    "dot",
+    "flatten",
+    "unsqueeze",
+    "reshape",
+    "transpose",
+    "norm",
+    "stack",
+    "cat",
+    "no_grad",
+    "setitem",
 ]
