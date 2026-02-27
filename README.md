@@ -57,12 +57,11 @@ optimizer.step()
 
 ## Example: 1D regression
 
-The `examples/` directory includes a regression demo that fits an MLP to a noisy sine wave (with an optional PyTorch baseline for comparison):
+The `examples/` directory includes a regression demo that fits an MLP to a noisy sine wave.
+Not counting argument parsing and plotting, the core part of the code is only ~40 lines. 
 
 ```bash
-python main.py
-# or
-python examples/regression_1d.py
+python -m examples.regression_1d.main # use --help for cli arg descriptions
 ```
 
 This trains a small MLP and saves a plot of the fit under `media/`.
