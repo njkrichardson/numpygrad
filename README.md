@@ -1,3 +1,5 @@
+![CI](https://github.com/njkrichardson/numpygrad/actions/workflows/ci.yml/badge.svg)
+
 # NumpyGrad
 
 A small **autograd** and neural network library with a **PyTorch-like API**, built on **NumPy** only. No GPU, no C++ extensions—just Python and NumPy. Useful for learning how backprop and frameworks like PyTorch work, or for lightweight experiments where a full framework is overkill.
