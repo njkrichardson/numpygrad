@@ -55,6 +55,10 @@ exclude = "examples/|tests/|src/numpygrad/utils/visualizations\\.py$"
 module = "graphviz"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "numpygrad.utils.visualizations"
+ignore_errors = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
