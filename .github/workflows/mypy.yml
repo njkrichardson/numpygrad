@@ -20,6 +20,6 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       - name: Install 
-        run: pip install uv && uv sync --group dev
+        run: pip install uv && uv sync --group dev 
       - name: Run mypy
-        run: uv run mypy . 
+        run: uv run mypy --config-file pyproject.toml .
