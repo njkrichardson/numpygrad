@@ -3,11 +3,6 @@ import numpy as np
 from numpygrad.utils.data.dataset import Dataset, TensorDataset
 
 
-def _can_batch_by_slice(dataset: Dataset) -> bool:
-    """True if dataset exposes .data and .targets for slice-based batching."""
-    return hasattr(dataset, "data") and hasattr(dataset, "targets")
-
-
 def _to_numpy(item: object) -> np.ndarray:
     """Extract numpy array from Array or return as-is if already ndarray."""
     if hasattr(item, "data"):

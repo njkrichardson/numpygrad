@@ -42,6 +42,7 @@ omit = [
 ]
 
 [tool.mypy]
+disable_error_code = "annotation-unchecked"
 python_version = "3.12"
 warn_return_any = false
 warn_unused_configs = true
