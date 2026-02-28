@@ -21,5 +21,7 @@ jobs:
           cache: 'pip'
       - name: Install 
         run: pip install uv && uv sync --group dev 
+      - name: Show mypy config 
+        run: uv run mypy --show-config
       - name: Run mypy
         run: uv run mypy --config-file pyproject.toml .

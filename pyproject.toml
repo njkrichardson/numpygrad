@@ -48,7 +48,8 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 check_untyped_defs = false
 strict_optional = true
-exclude = ["examples/", "src/numpygrad/utils/visualizations\\.py", "tests/"]
+exclude = "examples/|tests/|src/numpygrad/utils/visualizations\\.py$"
+# exclude = ["examples/", "src/numpygrad/utils/visualizations\\.py", "tests/"]
 
 [[tool.mypy.overrides]]
 module = "graphviz"
