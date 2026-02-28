@@ -19,9 +19,7 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
-      - name: Install torch (cpu) 
-        run: pip install torch --index-url https://download.pytorch.org/whl/cpu # don't let the ci install all the cuda dependencies
       - name: Install dependencies
-        run: pip install -e ".[tests]"
+        run: pip install -e ".[dev]"
       - name: Run mypy
         run: mypy . 
