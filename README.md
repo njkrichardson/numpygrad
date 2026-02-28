@@ -10,13 +10,13 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 
 ## Features
 
-- **NumPy-only** — Single dependency: NumPy. Runs anywhere Python runs.
-- **Define-by-run autograd** — Build a computation graph as you run ops; backward pass computes gradients via the chain rule.
-- **Familiar array API** — `npg.array` with `shape`, `ndim`, `dtype` etc.
+- **NumPy-only** — Single dependency: NumPy. 
+- **Define-by-run autograd** — Builds a computation graph as ops are invoked (i.e., Torch eager).
+- **Familiar array API** — `array` with `shape`, `ndim`, `dtype` etc.
 - **Familiar array creation** - `ones`, `zeros`, `arange`, `randn`, etc.
 - **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`, `with ngp.no_grad():`, etc.
 - **Basic NN Modules and Optimizers** - `Linear`, `MLP`, `SGD`, etc.
-- **Broadcasting & batched ops** — Matmul, reductions, transforms, and elementwise ops support batched and broadcasted shapes.
+- **Broadcasting & batched ops** — Linear algebra, reductions, transforms, and elementwise ops support batched and broadcasted shapes.
 - **Familiar special methods** - `x @ y`, `mask = x > 0`, etc.
 
 ## Installation
@@ -40,16 +40,16 @@ pip install -e ".[examples]"  # matplotlib for plotting
 
 ```python
 import numpygrad as np # live on the edge! 
-from numpygrad.nn import MLP
+import numpygrad.nn as nn
 
 # Arrays and gradients
-x = np.array([1.0, 2.0, 3.0], requires_grad=True)
+x = np.randn((3, 4), requires_grad=True)
 y = (x ** 2).sum()
 y.backward()
 print(x.grad)  # gradients of sum(x²) w.r.t. x
 
 # Small MLP
-net = MLP(input_dim=1, hidden_sizes=[8, 8], output_dim=1)
+net = nn.MLP(input_dim=1, hidden_sizes=[8, 8], output_dim=1)
 optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
 
 x = np.randn(32, 1)
@@ -75,8 +75,8 @@ This trains a small MLP and saves a plot of the fit under `media/`.
 
 ```
 src/numpygrad/
-├── core/          # Array, autograd (Function, backward), dispatch, device
-├── ops/            # Operators: elementwise, linalg, reductions, etc.
+├── core/           # Array, autograd (Function, backward), dispatch, device
+├── ops/            # Operators: elementwise, linalg, transforms, reductions, etc.
 ├── nn/             # Linear, MLP (and other modules)
 ├── optim/          # SGD and optimizer base
 ├── utils/          # Logging, I/O, visualizations

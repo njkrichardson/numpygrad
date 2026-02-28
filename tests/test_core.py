@@ -224,7 +224,7 @@ def test_randint_int_size():
 
 
 # ---------------------------------------------------------------------------
-# no_grad context manager
+# no_grad (context manager and decorator)
 # ---------------------------------------------------------------------------
 
 
@@ -243,3 +243,15 @@ def test_no_grad_restores_state():
     y = x + x
     assert y.grad_fn is not None
     assert y.requires_grad
+
+
+def test_no_grad_decorator():
+    x = npg.array(np.array([1.0, 2.0]), requires_grad=True)
+
+    @npg.no_grad()
+    def f(x):
+        return x + x
+
+    y = f(x)
+    assert y.grad_fn is None
+    assert not y.requires_grad

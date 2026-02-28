@@ -37,6 +37,7 @@ def main(args: argparse.Namespace):
     dataset = RegressionDataset(args.num_examples, args.snr_db)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
+    @np.no_grad()
     def estimate_loss(num_batches: int):
         losses = []
         for _ in range(num_batches):
