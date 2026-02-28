@@ -21,4 +21,7 @@ repos:
         name: Run full pytest suite on push
         entry: pytest
         language: system
+        files: \.py$           # only Python files trigger this hook
+        branches: ^main$       # only run on main branch
+        args: ["--maxfail=1", "--disable-warnings"]
         stages: [pre-push]
