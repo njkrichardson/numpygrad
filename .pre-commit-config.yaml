@@ -17,11 +17,17 @@ repos:
         additional_dependencies: []
   - repo: local
     hooks:
+      # - id: run-tests
+      #   name: Run full pytest suite on push
+      #   entry: pytest
+      #   language: system
+      #   branches: ^main$       # only run on main branch
+      #   pass_filenames: false
+      #   args: ["--maxfail=1", "--disable-warnings"]
+      #   stages: [pre-push]
       - id: run-tests
-        name: Run full pytest suite on push
-        entry: pytest
-        language: system
-        branches: ^main$       # only run on main branch
+        name: Run full pytest suite on push to main
+        entry: scripts/run-tests-on-main
+        language: script
         pass_filenames: false
-        args: ["--maxfail=1", "--disable-warnings"]
         stages: [pre-push]
