@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - name: Install 
+        run: pip install uv && uv sync --group dev
       - name: Run mypy
         run: mypy . 
