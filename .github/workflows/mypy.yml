@@ -1,0 +1,27 @@
+name: mypy
+on: 
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install torch (cpu) 
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu # don't let the ci install all the cuda dependencies
+      - name: Install dependencies
+        run: pip install -e ".[tests]"
+      - name: Run mypy
+        run: mypy . 

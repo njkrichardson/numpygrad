@@ -1,6 +1,6 @@
 import numpy as np
 
-from numpygrad.utils.data.dataset import Dataset
+from numpygrad.utils.data.dataset import Dataset, TensorDataset
 
 
 def _can_batch_by_slice(dataset: Dataset) -> bool:
@@ -43,7 +43,7 @@ class _DataLoaderIter:
         idx_batch = self.indices[self.position : end]
         self.position = end
 
-        if _can_batch_by_slice(dataset):
+        if isinstance(dataset, TensorDataset):
             batch_x = dataset.data[idx_batch]
             batch_y = dataset.targets[idx_batch]
             return batch_x, batch_y

@@ -239,7 +239,7 @@ class Product(Function):
         keepdims = ctx.keepdims
 
         # a is Array; out is the raw ndarray from np.prod (stored as second element)
-        out_nd = out.data if hasattr(out, "data") else out
+        out_nd = out.data if isinstance(out, Array) else out
         if not keepdims and axis is not None:
             grad = np.expand_dims(grad, axis)
             out_nd = np.expand_dims(out_nd, axis)

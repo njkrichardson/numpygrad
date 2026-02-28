@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
@@ -31,9 +33,9 @@ class Transpose(Function):
         )
 
     @staticmethod
-    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
-        axes = ctx.axes
-        inverse_axes = np.argsort(axes)
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        assert ctx.axes is not None
+        inverse_axes = np.argsort(ctx.axes)
         return np.transpose(grad, axes=inverse_axes), None
 
 
@@ -77,7 +79,7 @@ def reshape_autograd(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Arr
 
 def normalize_key(
     key: "ArrayCoercible | slice | tuple[slice, ...]",
-) -> np.ndarray | tuple[np.ndarray, ...]:
+) -> Any:
     if isinstance(key, Array):
         return key.data
     elif isinstance(key, tuple):
@@ -113,7 +115,7 @@ class Slice(Function):
         )
 
     @staticmethod
-    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
         a = ctx.saved_arrays[0]
         grad_a = np.zeros_like(a.data, dtype=grad.dtype)
         grad_a[ctx.key] = grad
@@ -192,11 +194,11 @@ def flatten_autograd(a: ArrayCoercible) -> Array:
 
 @register(OperatorId.STACK)
 def stack_cpu(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
-    arrays = tuple(ensure_array(a) for a in arrays)
+    arrs = tuple(ensure_array(a) for a in arrays)
     return Array(
-        np.stack([a.data for a in arrays], axis=axis),
+        np.stack([a.data for a in arrs], axis=axis),
         device="cpu_np",
-        requires_grad=any(a.requires_grad for a in arrays),
+        requires_grad=any(a.requires_grad for a in arrs),
     )
 
 
@@ -204,6 +206,7 @@ class Stack(Function):
     @staticmethod
     def forward(ctx: Context, *arrays_and_axis: ArrayCoercible | int) -> Array:
         *array_args, axis = arrays_and_axis
+        assert isinstance(axis, int)
         arrays = tuple(ensure_array(a) for a in array_args)
         ctx.axis = axis
         ctx.num_arrays = len(arrays)
@@ -219,6 +222,7 @@ class Stack(Function):
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        assert isinstance(ctx.axis, int)
         axis = ctx.axis
         splits = np.split(grad, ctx.num_arrays, axis=axis)
         # Each split has an extra dimension at axis; squeeze it to match input shape.
@@ -232,11 +236,11 @@ def stack_autograd(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
 
 @register(OperatorId.CAT)
 def cat_cpu(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
-    arrays = tuple(ensure_array(a) for a in arrays)
+    arrs = tuple(ensure_array(a) for a in arrays)
     return Array(
-        np.concatenate([a.data for a in arrays], axis=axis),
+        np.concatenate([a.data for a in arrs], axis=axis),
         device="cpu_np",
-        requires_grad=any(a.requires_grad for a in arrays),
+        requires_grad=any(a.requires_grad for a in arrs),
     )
 
 
@@ -244,6 +248,7 @@ class Cat(Function):
     @staticmethod
     def forward(ctx: Context, *arrays_and_axis: ArrayCoercible | int) -> Array:
         *array_args, axis = arrays_and_axis
+        assert isinstance(axis, int)
         arrays = tuple(ensure_array(a) for a in array_args)
         ctx.axis = axis
         ctx.sizes = tuple(a.shape[axis] for a in arrays)
@@ -259,6 +264,7 @@ class Cat(Function):
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        assert isinstance(ctx.axis, int)
         axis = ctx.axis
         sizes = ctx.sizes
         splits = np.split(grad, np.cumsum(sizes)[:-1], axis=axis)

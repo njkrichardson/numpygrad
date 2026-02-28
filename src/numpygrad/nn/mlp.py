@@ -20,7 +20,7 @@ class MLP(Module):
         else:
             raise ValueError(f"Activation {activation} not supported")
 
-        layers = []
+        layers: list[Module] = []
         pairs = list(zip(dims[:-1], dims[1:], strict=False))
         for i, (nin, nout) in enumerate(pairs):
             layers.append(Linear(nin, nout))

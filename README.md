@@ -3,6 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![Ruff](https://img.shields.io/badge/lint-ruff-cc6600)
 ![Coverage](https://codecov.io/gh/njkrichardson/numpygrad/branch/main/graph/badge.svg)
+![mypy](https://github.com/njkrichardson/numpygrad/actions/workflows/mypy.yml/badge.svg)
 
 # NumpyGrad
 

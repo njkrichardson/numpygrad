@@ -162,9 +162,12 @@ class Array:
         return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
 
     def reshape(self, *new_shape) -> "Array":
-        if len(new_shape) == 1 and isinstance(new_shape[0], (tuple, list)):
-            new_shape = new_shape[0]
-        return dispatch(OperatorId.RESHAPE, self, new_shape=new_shape)
+        shape = (
+            new_shape[0]
+            if len(new_shape) == 1 and isinstance(new_shape[0], (tuple, list))
+            else new_shape
+        )
+        return dispatch(OperatorId.RESHAPE, self, new_shape=shape)
 
     def view(self, new_shape: tuple[int, ...] | int) -> "Array":
         return self.reshape(new_shape)
