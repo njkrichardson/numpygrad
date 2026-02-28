@@ -1,11 +1,11 @@
 import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
-from numpygrad.core.registry import register, OperatorRequirements
+from numpygrad.core.function import Function
 from numpygrad.core.opid import OperatorId
+from numpygrad.core.registry import OperatorRequirements, register
 from numpygrad.ops.core import ensure_array
 from numpygrad.ops.transforms import normalize_key
-from numpygrad.core.function import Function
 
 
 @register(OperatorId.GT)
@@ -38,7 +38,6 @@ def ne_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Array(ensure_array(a).data != ensure_array(b).data)
 
 
-
 @register(OperatorId.SETITEM)
 def setitem_cpu(a: ArrayCoercible, key: tuple[int, ...], value: ArrayCoercible) -> Array:
     a, value = ensure_array(a), ensure_array(value)
@@ -47,6 +46,7 @@ def setitem_cpu(a: ArrayCoercible, key: tuple[int, ...], value: ArrayCoercible) 
     out = a.data.copy()
     out[key] = value.data
     return Array(out, device=a.device, requires_grad=a.requires_grad or value.requires_grad)
+
 
 class Setitem(Function):
     @staticmethod

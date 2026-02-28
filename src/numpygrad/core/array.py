@@ -1,14 +1,12 @@
-from typing import TypeAlias
-
 import numpy as np
 
+from numpygrad.core.device import DeviceId
 from numpygrad.core.dispatch import dispatch
 from numpygrad.core.opid import OperatorId
-from numpygrad.core.device import DeviceId
 
-ArrayCoercible: TypeAlias = (
-    "np.ndarray | int | float | list[int | float] | tuple[int | float] | Array | tuple[int, ...]"
-)
+type ArrayCoercible = "np.ndarray | int | float | \
+list[int | float] | tuple[int | float] | Array | tuple[int, ...]"
+
 
 class Array:
     def __init__(
@@ -27,7 +25,8 @@ class Array:
         elif isinstance(data, np.ndarray):
             pass
         elif isinstance(data, Array):
-            # Unwrap so self.data is always ndarray and zeros_like(grad) gets correct shape
+            # Unwrap so self.data is always ndarray and zeros_like(grad) gets
+            # correct shape
             data = data.data
 
         self.data: np.ndarray = data  # type: ignore
@@ -87,8 +86,11 @@ class Array:
         self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible
     ) -> None:
         # In-place mutation on Arrays that participate in autograd is not supported.
-        # Use the functional setitem op instead (numpygrad.ops.setitem or Array.setitem).
-        from numpygrad.ops.core import ensure_array  # local import to avoid circular dependency
+        # Use the functional setitem op instead (numpygrad.ops.setitem or
+        # Array.setitem).
+        from numpygrad.ops.core import (
+            ensure_array,
+        )  # local import to avoid circular dependency
 
         if self.requires_grad or ensure_array(value).requires_grad:
             raise RuntimeError(
@@ -99,9 +101,7 @@ class Array:
         result = dispatch(OperatorId.SETITEM, self, key, value)
         self.data = result.data
 
-    def setitem(
-        self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible
-    ):
+    def setitem(self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible):
         return dispatch(OperatorId.SETITEM, self, key, value)
 
     def __gt__(self, other: ArrayCoercible) -> "Array":
@@ -169,29 +169,19 @@ class Array:
     def view(self, new_shape: tuple[int, ...] | int) -> "Array":
         return self.reshape(new_shape)
 
-    def mean(
-        self, axis: tuple[int, ...] | int | None = None, keepdims: bool = False
-    ) -> "Array":
+    def mean(self, axis: tuple[int, ...] | int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.MEAN, self, axis=axis, keepdims=keepdims)
 
-    def max(
-        self, axis: int | None = None, keepdims: bool = False
-    ) -> "Array":
+    def max(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.MAX, self, axis=axis, keepdims=keepdims)
 
-    def min(
-        self, axis: int | None = None, keepdims: bool = False
-    ) -> "Array":
+    def min(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.MIN, self, axis=axis, keepdims=keepdims)
 
-    def prod(
-        self, axis: int | None = None, keepdims: bool = False
-    ) -> "Array":
+    def prod(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.PRODUCT, self, axis=axis, keepdims=keepdims)
 
-    def argmax(
-        self, axis: int | None = None, keepdims: bool = False
-    ) -> "Array":
+    def argmax(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.ARGMAX, self, axis=axis, keepdims=keepdims)
 
     @property
@@ -225,6 +215,6 @@ class Array:
 
             grads = node.grad_fn.backward(node.ctx, node.grad)
 
-            for parent, parent_grad in zip(node.parents, grads):
+            for parent, parent_grad in zip(node.parents, grads, strict=False):
                 if getattr(parent, "requires_grad", False):
                     parent.grad += parent_grad

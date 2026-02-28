@@ -1,20 +1,21 @@
-from hypothesis import given, strategies as st
 import numpy as np
 import numpy.random as npr
 import torch
+from hypothesis import given
+from hypothesis import strategies as st
 
 import numpygrad as npg
-from tests.strategies import (
-    generic_array,
-    shape_nd,
-    array_pair,
-    positive_array,
-    FLOAT_DTYPES,
-)
 from tests.configuration import (
-    check_equality,
-    VALUE_RANGE,
     POW_RANGE,
+    VALUE_RANGE,
+    check_equality,
+)
+from tests.strategies import (
+    FLOAT_DTYPES,
+    array_pair,
+    generic_array,
+    positive_array,
+    shape_nd,
 )
 
 npg.manual_seed(0)
@@ -222,9 +223,7 @@ def test_pow_backward(arr: np.ndarray, constant: int):
 
 
 def _make_safe_for_div(A: np.ndarray, margin: float = 1e-2) -> np.ndarray:
-    return np.where(
-        A >= 0, np.maximum(A, margin), np.minimum(A, -margin)
-    )  # avoids extreme values
+    return np.where(A >= 0, np.maximum(A, margin), np.minimum(A, -margin))  # avoids extreme values
 
 
 @given(generic_array())

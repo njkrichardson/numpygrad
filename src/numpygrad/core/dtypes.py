@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 
 float32 = np.float32
 float64 = np.float64

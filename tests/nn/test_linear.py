@@ -1,18 +1,13 @@
-from hypothesis import given, strategies as st
-import numpy as np 
-import numpy.random as npr
-import torch 
+import numpy as np
+import torch
+from hypothesis import given
+from hypothesis import strategies as st
 
 import numpygrad as npg
 from numpygrad.nn.linear import Linear
-
 from tests.configuration import (
-    check_equality,
     FLOAT_DISTRIBUTION,
-    FLOAT_DTYPES,
-)
-from tests.strategies import (
-    generic_array,
+    check_equality,
 )
 
 MIN_DIM_SIZE: int = 1
@@ -22,12 +17,16 @@ MAX_BATCH_DIM_SIZE: int = 16
 
 DIM_SIZE = st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE)
 
+
 @st.composite
 def configuration(draw):
     num_inputs = draw(DIM_SIZE)
     num_outputs = draw(DIM_SIZE)
     num_batch_dims = draw(st.integers(min_value=0, max_value=MAX_NUM_BATCH_DIMS))
-    batch_dim_sizes = tuple(draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_BATCH_DIM_SIZE)) for _ in range(num_batch_dims))
+    batch_dim_sizes = tuple(
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_BATCH_DIM_SIZE))
+        for _ in range(num_batch_dims)
+    )
     input_shape = tuple(batch_dim_sizes) + (num_inputs,)
     output_shape = tuple(batch_dim_sizes) + (num_outputs,)
     return input_shape, output_shape
@@ -65,6 +64,7 @@ def test_linear_forward(config):
     yt = torch_linear(torch.from_numpy(x))
 
     check_equality(y.data, yt.detach().numpy())
+
 
 @given(configuration())
 def test_linear_backward(config):

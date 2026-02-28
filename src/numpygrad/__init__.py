@@ -1,48 +1,48 @@
-from numpygrad.core import array, ndarray
-from numpygrad.core.dtypes import float32, float64, int32, int64
-from numpygrad.ops import (
-    add,
-    mul,
-    sum,
-    mm,
-    matmul,
-    relu,
-    mean,
-    prod,
-    min,
-    max,
-    argmax,
-    dot,
-    flatten,
-    unsqueeze,
-    reshape,
-    transpose,
-    norm,
-    maximum,
-    minimum,
-    exp,
-    pow,
-    log,
-    abs,
-    clip,
-    stack,
-    cat,
-    setitem,
-)
-from numpygrad.utils import io, Log
 import numpygrad.configuration as configuration
+import numpygrad.optim as optim
 import numpygrad.utils as utils
-from numpygrad.core.random import manual_seed
+from numpygrad.core import array, ndarray
 from numpygrad.core.array_creation import (
+    arange,
+    ones,
+    randint,
     randn,
     zeros,
-    ones,
     zeros_like,
-    arange,
-    randint,
 )
-import numpygrad.optim as optim
 from numpygrad.core.contexts import no_grad
+from numpygrad.core.dtypes import float32, float64, int32, int64
+from numpygrad.core.random import manual_seed
+from numpygrad.ops import (
+    abs,
+    add,
+    argmax,
+    cat,
+    clip,
+    dot,
+    exp,
+    flatten,
+    log,
+    matmul,
+    max,
+    maximum,
+    mean,
+    min,
+    minimum,
+    mm,
+    mul,
+    norm,
+    pow,
+    prod,
+    relu,
+    reshape,
+    setitem,
+    stack,
+    sum,
+    transpose,
+    unsqueeze,
+)
+from numpygrad.utils import Log, io
 
 __all__ = [
     "array",

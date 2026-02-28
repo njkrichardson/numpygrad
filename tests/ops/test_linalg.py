@@ -1,20 +1,20 @@
-from hypothesis import given, strategies as st
 import numpy as np
 import numpy.random as npr
 import torch
+from hypothesis import given
 
 import numpygrad as npg
 from tests.configuration import (
     check_equality,
 )
 from tests.strategies import (
-    shape_nd,
+    FLOAT_DTYPES,
     array_pair,
     dot_1d_pair,
-    reduction_args,
     generic_array,
-    FLOAT_DTYPES,
+    reduction_args,
 )
+
 npg.manual_seed(0)
 npr.seed(0)
 
@@ -40,6 +40,7 @@ def test_mm_api(arrs: tuple[np.ndarray, np.ndarray]):
     reference = A @ B
     check_equality(z.data, reference)
 
+
 @given(array_pair(min_dims=3, max_dims=3, mm_broadcastable=True))
 def test_mm_batched(arrs: tuple[np.ndarray, np.ndarray]):
     A, B = arrs
@@ -49,6 +50,7 @@ def test_mm_batched(arrs: tuple[np.ndarray, np.ndarray]):
 
     reference = A @ B
     check_equality(z.data, reference)
+
 
 @given(array_pair(min_dims=3, mm_broadcastable=True))
 def test_mm_batched_broadcast(arrs: tuple[np.ndarray, np.ndarray]):
@@ -175,7 +177,8 @@ def test_dot_2d_basic(arrs: tuple[np.ndarray, np.ndarray]):
 
 
 # Dot 2D backward not tested: numpygrad Dot backward is for scalar output (1D-1D) only.
-# 2D dot forward uses np.dot (matrix product) but backward uses grad_out * b.data which assumes scalar grad_out.
+# 2D dot forward uses np.dot (matrix product) but backward uses grad_out * b.data which
+# assumes scalar grad_out.
 
 
 # --- norm ---

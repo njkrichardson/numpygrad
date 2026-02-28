@@ -7,7 +7,7 @@ def reduce_grad_to_shape(grad, target_shape):
     shape_aligned = (1,) * ndim_diff + target_shape
     axes = tuple(
         i
-        for i, (g_dim, t_dim) in enumerate(zip(grad.shape, shape_aligned))
+        for i, (g_dim, t_dim) in enumerate(zip(grad.shape, shape_aligned, strict=False))
         if t_dim == 1
     )
     if axes:
@@ -31,7 +31,7 @@ def unbroadcast(grad: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
 
     # sum over axes where target_shape has 1
     axes = tuple(
-        i for i, (_, t_dim) in enumerate(zip(grad_shape, shape_aligned)) if t_dim == 1
+        i for i, (_, t_dim) in enumerate(zip(grad_shape, shape_aligned, strict=False)) if t_dim == 1
     )
     if axes:
         grad = grad.sum(axis=axes, keepdims=True)

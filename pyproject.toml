@@ -13,6 +13,7 @@ dependencies = [
 tests = [
     "hypothesis>=6.151.9",
     "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
     "torch>=2.10.0",
 ]
 examples = [
@@ -28,4 +29,31 @@ dev = [
     "pre-commit>=4.5.1",
     "setuptools>=80.10.2",
     "tensorboard>=2.20.0",
+    "ruff>=0.15.4",
+]
+
+[tool.coverage.run]
+omit = [
+    "numpygrad/configuration.py",
+    "src/numpygrad/utils/io.py",
+    "src/numpygrad/utils/logging.py",
+    "src/numpygrad/utils/visualizations.py",
+    "*/__init__.py",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # import sorting
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    # "SIM",  # simplifications
+    # "C4",   # comprehensions
+    "TID",  # tidy imports
+    # "RUF",  # ruff-specific
 ]

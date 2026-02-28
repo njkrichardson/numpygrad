@@ -1,5 +1,5 @@
-from numpygrad.optim.optimizer import Optimizer
 from numpygrad.core.array import Array
+from numpygrad.optim.optimizer import Optimizer
 
 
 class SGD(Optimizer):

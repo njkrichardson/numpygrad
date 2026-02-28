@@ -2,14 +2,16 @@ from typing import Any
 
 from numpygrad.core.array import Array, ArrayCoercible
 
+
 class Parameter(Array):
     def __init__(self, data: ArrayCoercible):
         super().__init__(data, requires_grad=True)
 
+
 class Module:
-    def __init__(self): 
+    def __init__(self):
         self._parameters: dict[str, Parameter] = {}
-        self._modules: dict[str, "Module"] = {}
+        self._modules: dict[str, Module] = {}
         self._buffers: dict[str, Array] = {}
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -36,7 +38,9 @@ class Module:
         self._modules[name] = module
 
     def state_dict(self):
-        """Walk parameters, buffers, and modules recursively (DFS) and return a flat dictionary of names and values."""
+        """Walk parameters, buffers, and modules recursively (DFS) and return a
+        flat dictionary of names and values.
+        """
         state = {}
         for name, param in self._parameters.items():
             state[name] = param.data

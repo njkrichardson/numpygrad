@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 import numpygrad as npg
 import numpygrad.ops as ops
 from tests.strategies import array_pair, generic_array
-
 
 # --- Comparison ops (GT, LT, GE, LE, EQ, NE): forward-only, no backward ---
 
@@ -99,7 +99,9 @@ def test_array_setitem_requires_grad_raises():
     x = npg.ones((3, 3), requires_grad=True)
     b = npg.ones((3,), requires_grad=True)
 
-    with pytest.raises(RuntimeError, match="__setitem__ on Arrays that require grad is not supported"):
+    with pytest.raises(
+        RuntimeError, match="__setitem__ on Arrays that require grad is not supported"
+    ):
         x[:, 0] = b
 
 
@@ -124,4 +126,3 @@ def test_setitem_forward(data):
     expected = arr.copy()
     expected[key] = value
     np.testing.assert_array_equal(out.data, expected)
-

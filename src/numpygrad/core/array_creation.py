@@ -1,7 +1,8 @@
-from numpygrad.core.array import Array
-import numpygrad as npg
 import numpy as np
 import numpy.random as npr
+
+import numpygrad as npg
+from numpygrad.core.array import Array
 
 
 def ones(shape: tuple[int, ...] | int, **kwargs) -> Array:
@@ -13,14 +14,10 @@ def zeros(shape: tuple[int, ...] | int, **kwargs) -> npg.ndarray:
 
 
 def zeros_like(x: npg.ndarray | np.ndarray, **kwargs) -> npg.ndarray:
-    return npg.array(
-        np.zeros_like(x.data if isinstance(x, npg.ndarray) else x), **kwargs
-    )
+    return npg.array(np.zeros_like(x.data if isinstance(x, npg.ndarray) else x), **kwargs)
 
 
-def arange(
-    start: float, stop: float | None = None, step: int = 1, **kwargs
-) -> npg.ndarray:
+def arange(start: float, stop: float | None = None, step: int = 1, **kwargs) -> npg.ndarray:
     if stop is None:
         stop = start
         start = 0

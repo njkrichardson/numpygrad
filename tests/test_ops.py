@@ -1,6 +1,3 @@
-import numpy as np
-import torch
-
 import numpygrad as npg
 
 npg.manual_seed(0)

@@ -1,9 +1,24 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4  
+    hooks:
+      - id: ruff-format
+        name: Ruff format
+        entry: ruff format
+        language: python
+        types: [python]
+        args: ["."]
+      - id: ruff
+        name: Ruff lint
+        entry: ruff check
+        language: python
+        types: [python]
+        args: ["."]
+        additional_dependencies: []
   - repo: local
     hooks:
-      - id: pytest
-        name: Run pytest
+      - id: run-tests
+        name: Run full pytest suite on push
         entry: pytest
-        language: system  # uses your system Python
-        pass_filenames: false
-        types: [python]
+        language: system
+        stages: [pre-push]

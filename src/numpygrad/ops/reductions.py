@@ -1,17 +1,15 @@
 import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
-from numpygrad.core.registry import register, OperatorRequirements
-from numpygrad.core.opid import OperatorId
-from numpygrad.core.function import Function, Context
-from numpygrad.ops.core import ensure_array
 from numpygrad.core.broadcasting import expand_to_shape
+from numpygrad.core.function import Context, Function
+from numpygrad.core.opid import OperatorId
+from numpygrad.core.registry import OperatorRequirements, register
+from numpygrad.ops.core import ensure_array
 
 
 @register(OperatorId.SUM)
-def sum_cpu(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def sum_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     a = ensure_array(a)
     return Array(
         np.sum(a.data, axis, keepdims=keepdims),
@@ -47,9 +45,7 @@ class Sum(Function):
 
 
 @register(OperatorId.SUM, op_requirements=OperatorRequirements.Autograd)
-def sum_autograd(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def sum_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return Sum.apply(a, axis, keepdims)
 
 
@@ -108,10 +104,9 @@ def mean_autograd(
 ) -> Array:
     return Mean.apply(a, axis, keepdims)
 
+
 @register(OperatorId.MAX)
-def max_cpu(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def max_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     a = ensure_array(a)
     return Array(
         np.max(a.data, axis, keepdims=keepdims),
@@ -156,22 +151,19 @@ class Max(Function):
 
 
 @register(OperatorId.MAX, op_requirements=OperatorRequirements.Autograd)
-def max_autograd(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def max_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return Max.apply(a, axis, keepdims)
 
 
 @register(OperatorId.MIN)
-def min_cpu(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def min_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     a = ensure_array(a)
     return Array(
         np.min(a.data, axis, keepdims=keepdims),
         device="cpu_np",
         requires_grad=False,
     )
+
 
 class Min(Function):
     @staticmethod
@@ -209,21 +201,19 @@ class Min(Function):
 
 
 @register(OperatorId.MIN, op_requirements=OperatorRequirements.Autograd)
-def min_autograd(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def min_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return Min.apply(a, axis, keepdims)
 
+
 @register(OperatorId.PRODUCT)
-def product_cpu(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def product_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     a = ensure_array(a)
     return Array(
         np.prod(a.data, axis, keepdims=keepdims),
         device="cpu_np",
         requires_grad=False,
     )
+
 
 class Product(Function):
     @staticmethod
@@ -255,19 +245,16 @@ class Product(Function):
             out_nd = np.expand_dims(out_nd, axis)
 
         grad_a = grad * (out_nd / a.data)
-        return grad_a, None, None  
+        return grad_a, None, None
 
 
 @register(OperatorId.PRODUCT, op_requirements=OperatorRequirements.Autograd)
-def product_autograd(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def product_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return Product.apply(a, axis, keepdims)
 
+
 @register(OperatorId.ARGMAX)
-def argmax_cpu(
-    a: ArrayCoercible, axis: int | None = None, keepdims: bool = False
-) -> Array:
+def argmax_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     a = ensure_array(a)
     return Array(
         np.argmax(a.data, axis, keepdims=keepdims),

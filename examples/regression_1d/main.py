@@ -1,12 +1,14 @@
 import argparse
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import numpygrad as np
-import numpygrad.nn as nn 
-from numpygrad.utils.data import DataLoader
+import numpygrad.nn as nn
 from examples.regression_1d.data import RegressionDataset
+from numpygrad.utils.data import DataLoader
 
 np.manual_seed(0)
 Log = np.Log(__name__)
@@ -22,6 +24,7 @@ parser.add_argument("--output-dim", type=int, default=1)
 parser.add_argument("--snr-db", type=float, default=10)
 parser.add_argument("--num-examples", type=int, default=2_048)
 parser.add_argument("--num-estimate-loss-batches", type=int, default=32)
+
 
 def main(args: argparse.Namespace):
     hidden_sizes = args.hidden_sizes
@@ -62,7 +65,12 @@ def main(args: argparse.Namespace):
         save_path = np.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png"
         plt.figure(figsize=(18, 10))
         plt.scatter(dataset.inputs_unnormalized, dataset.targets.data, c="tab:blue", alpha=0.5)
-        plt.plot(dataset.inputs_unnormalized, net(dataset.data).data, c="tab:orange", linewidth=3)
+        plt.plot(
+            dataset.inputs_unnormalized,
+            net(dataset.data).data,
+            c="tab:orange",
+            linewidth=3,
+        )
         plt.tight_layout()
         plt.savefig(save_path)
         plt.close()

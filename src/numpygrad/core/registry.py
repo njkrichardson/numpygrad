@@ -1,9 +1,9 @@
-from collections.abc import Callable
 import dataclasses
 import enum
+from collections.abc import Callable
 
-from numpygrad.core.opid import OperatorId
 from numpygrad.core.device import DeviceId
+from numpygrad.core.opid import OperatorId
 
 
 class OperatorRequirements(enum.StrEnum):

@@ -5,20 +5,21 @@ import numpy as np
 
 
 class Dataset(ABC):
-    """Base class for datasets used with DataLoader. Subclass and implement __len__ and __getitem__."""
+    """Base class for datasets used with DataLoader.
+    Subclass and implement __len__ and __getitem__.
+    """
 
     @abstractmethod
-    def __len__(self) -> int:
-        ...
+    def __len__(self) -> int: ...
 
     @abstractmethod
-    def __getitem__(self, index: int) -> tuple[Any, Any]:
-        ...
+    def __getitem__(self, index: int) -> tuple[Any, Any]: ...
 
 
 class TensorDataset(Dataset):
     """
-    Dataset of (data, targets) from two array-likes, similar to torch.utils.data.TensorDataset.
+    Dataset of (data, targets) from two array-likes, similar to
+    torch.utils.data.TensorDataset.
 
     Accepts np.ndarray or list; stores data and targets as numpygrad arrays so the
     DataLoader can batch by slicing without per-sample conversion or stacking.

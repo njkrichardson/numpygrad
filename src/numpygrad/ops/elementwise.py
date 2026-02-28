@@ -1,11 +1,11 @@
 import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
-from numpygrad.core.registry import register, OperatorRequirements
-from numpygrad.core.opid import OperatorId
-from numpygrad.core.function import Function, Context
-from numpygrad.ops.core import ensure_array
 from numpygrad.core.broadcasting import unbroadcast
+from numpygrad.core.function import Context, Function
+from numpygrad.core.opid import OperatorId
+from numpygrad.core.registry import OperatorRequirements, register
+from numpygrad.ops.core import ensure_array
 
 
 @register(OperatorId.MUL)
@@ -142,6 +142,7 @@ class ReLU(Function):
 def relu_autograd(a: ArrayCoercible) -> Array:
     return ReLU.apply(a)
 
+
 @register(OperatorId.EXP)
 def exp_cpu(a: ArrayCoercible) -> Array:
     a = ensure_array(a)
@@ -150,7 +151,7 @@ def exp_cpu(a: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Exp(Function):
     @staticmethod
@@ -167,12 +168,13 @@ class Exp(Function):
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
         a = ctx.saved_arrays[0]
         agrad = grad * np.exp(a.data)
-        return (agrad,)  
+        return (agrad,)
 
 
 @register(OperatorId.EXP, op_requirements=OperatorRequirements.Autograd)
 def exp_autograd(a: ArrayCoercible) -> Array:
     return Exp.apply(a)
+
 
 @register(OperatorId.LOG)
 def log_cpu(a: ArrayCoercible) -> Array:
@@ -182,7 +184,7 @@ def log_cpu(a: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Log(Function):
     @staticmethod
@@ -198,13 +200,14 @@ class Log(Function):
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
         a = ctx.saved_arrays[0]
-        agrad = grad * 1/a.data
-        return (agrad,)  
+        agrad = grad * 1 / a.data
+        return (agrad,)
 
 
 @register(OperatorId.LOG, op_requirements=OperatorRequirements.Autograd)
 def log_autograd(a: ArrayCoercible) -> Array:
     return Log.apply(a)
+
 
 @register(OperatorId.ABS)
 def abs_cpu(a: ArrayCoercible) -> Array:
@@ -214,7 +217,7 @@ def abs_cpu(a: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Abs(Function):
     @staticmethod
@@ -231,7 +234,7 @@ class Abs(Function):
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
         a = ctx.saved_arrays[0]
         agrad = grad * np.sign(a.data)
-        return (agrad,)  
+        return (agrad,)
 
 
 @register(OperatorId.ABS, op_requirements=OperatorRequirements.Autograd)
@@ -247,7 +250,7 @@ def clip_cpu(a: ArrayCoercible, min: ArrayCoercible, max: ArrayCoercible) -> Arr
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Clip(Function):
     @staticmethod
@@ -264,7 +267,7 @@ class Clip(Function):
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
         a, min, max = ctx.saved_arrays
         agrad = np.where(a.data < min.data, 0, 1) * np.where(a.data > max.data, 0, 1) * grad
-        return (agrad, None, None)  
+        return (agrad, None, None)
 
 
 @register(OperatorId.CLIP, op_requirements=OperatorRequirements.Autograd)
@@ -280,7 +283,7 @@ def maximum_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Maximum(Function):
     @staticmethod
@@ -307,12 +310,13 @@ class Maximum(Function):
         grad_a = unbroadcast(grad_a, a.shape)
         grad_b = unbroadcast(grad_b, b.shape)
 
-        return (grad_a, grad_b)  
+        return (grad_a, grad_b)
 
 
 @register(OperatorId.MAXIMUM, op_requirements=OperatorRequirements.Autograd)
 def maximum_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Maximum.apply(a, b)
+
 
 @register(OperatorId.MINIMUM)
 def minimum_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
@@ -322,7 +326,7 @@ def minimum_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
-    
+
 
 class Minimum(Function):
     @staticmethod
@@ -349,7 +353,7 @@ class Minimum(Function):
         grad_a = unbroadcast(grad_a, a.shape)
         grad_b = unbroadcast(grad_b, b.shape)
 
-        return (grad_a, grad_b)  
+        return (grad_a, grad_b)
 
 
 @register(OperatorId.MINIMUM, op_requirements=OperatorRequirements.Autograd)

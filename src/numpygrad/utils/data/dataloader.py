@@ -11,7 +11,7 @@ def _can_batch_by_slice(dataset: Dataset) -> bool:
 def _to_numpy(item: object) -> np.ndarray:
     """Extract numpy array from Array or return as-is if already ndarray."""
     if hasattr(item, "data"):
-        return getattr(item, "data")
+        return item.data
     return np.asarray(item)
 
 
@@ -44,8 +44,8 @@ class _DataLoaderIter:
         self.position = end
 
         if _can_batch_by_slice(dataset):
-            batch_x = getattr(dataset, "data")[idx_batch]
-            batch_y = getattr(dataset, "targets")[idx_batch]
+            batch_x = dataset.data[idx_batch]
+            batch_y = dataset.targets[idx_batch]
             return batch_x, batch_y
 
         # Generic path: per-sample __getitem__ and stack

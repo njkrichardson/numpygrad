@@ -1,23 +1,21 @@
-from hypothesis import given
 import numpy as np
 import numpy.random as npr
 import torch
+from hypothesis import given
 
 import numpygrad as npg
 from tests.configuration import (
     check_equality,
 )
 from tests.strategies import (
+    FLOAT_DTYPES,
     generic_array,
-    positive_array,
     prod_safe_array,
     reduction_args,
-    FLOAT_DTYPES,
 )
 
 npg.manual_seed(0)
 npr.seed(0)
-
 
 
 @given(generic_array())

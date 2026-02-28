@@ -1,12 +1,17 @@
-from numpygrad.nn.module import Module, Sequential
-from numpygrad.nn.linear import Linear
 from numpygrad.core.array import Array
-from numpygrad.ops import relu
 from numpygrad.nn.activations import ReLU
+from numpygrad.nn.linear import Linear
+from numpygrad.nn.module import Module, Sequential
 
 
 class MLP(Module):
-    def __init__(self, input_dim: int, hidden_sizes: list[int], output_dim: int, activation: str = "relu"):
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_sizes: list[int],
+        output_dim: int,
+        activation: str = "relu",
+    ):
         super().__init__()
         dims = [input_dim] + hidden_sizes + [output_dim]
 
@@ -16,7 +21,7 @@ class MLP(Module):
             raise ValueError(f"Activation {activation} not supported")
 
         layers = []
-        pairs = list(zip(dims[:-1], dims[1:]))
+        pairs = list(zip(dims[:-1], dims[1:], strict=False))
         for i, (nin, nout) in enumerate(pairs):
             layers.append(Linear(nin, nout))
             if i < len(pairs) - 1:

@@ -26,7 +26,6 @@ class Function:
             out.parents = ()
             return out
 
-
         ctx = Context()
         out = cls.forward(ctx, *args)
         out.grad_fn = cls

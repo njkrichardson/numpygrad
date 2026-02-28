@@ -1,16 +1,16 @@
-from hypothesis import strategies as st
 import numpy as np
 import numpy.random as npr
+from hypothesis import strategies as st
 
 from tests.configuration import (
-    VALUE_RANGE,
-    FLOAT_DTYPES,
     DTYPES,
     FLOAT_DISTRIBUTION,
-    MIN_DIM_SIZE,
+    FLOAT_DTYPES,
     MAX_DIM_SIZE,
-    MIN_NUM_DIMS,
     MAX_NUM_DIMS,
+    MIN_DIM_SIZE,
+    MIN_NUM_DIMS,
+    VALUE_RANGE,
 )
 
 npr.seed(0)
@@ -20,8 +20,7 @@ npr.seed(0)
 def shape_nd(draw, min_num_dims: int = MIN_NUM_DIMS, max_num_dims: int = MAX_NUM_DIMS):
     num_dims = draw(st.integers(min_value=min_num_dims, max_value=max_num_dims))
     shape = tuple(
-        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
-        for _ in range(num_dims)
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE)) for _ in range(num_dims)
     )
     if len(shape) == 1:
         return shape[0]
@@ -43,9 +42,10 @@ def generic_array(draw, shape: tuple[int, ...] | None = None, dtypes=DTYPES):
 
     return arr
 
+
 def _arrays(shapes: list[tuple[int, ...]], dtypes: list[np.dtype]):
     arrays = []
-    for shape, dtype in zip(shapes, dtypes):
+    for shape, dtype in zip(shapes, dtypes, strict=False):
         if np.issubdtype(dtype, np.integer):
             arr = npr.randint(*VALUE_RANGE, size=shape).astype(dtype)
         elif np.issubdtype(dtype, np.floating):
@@ -58,14 +58,11 @@ def _arrays(shapes: list[tuple[int, ...]], dtypes: list[np.dtype]):
 
 
 @st.composite
-def _array_pair_same_shape(
-    draw, min_dims=MIN_NUM_DIMS, max_dims=MAX_NUM_DIMS, dtypes=DTYPES
-):
+def _array_pair_same_shape(draw, min_dims=MIN_NUM_DIMS, max_dims=MAX_NUM_DIMS, dtypes=DTYPES):
     ndim = draw(st.integers(min_value=min_dims, max_value=max_dims))
     dtype = draw(st.sampled_from(dtypes))
     shape = tuple(
-        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
-        for _ in range(ndim)
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE)) for _ in range(ndim)
     )
 
     if np.issubdtype(dtype, np.integer):
@@ -112,7 +109,8 @@ def _array_pair_broadcastable(
             shape_B.append(1)  # singleton -> broadcastable
 
     if mm_broadcastable:
-        # For batch matmul, the last two dimensions must be compatible for multiplication
+        # For batch matmul, the last two dimensions must be compatible
+        # for multiplication
         (m, k, n) = draw(shape_nd(min_num_dims=3, max_num_dims=3))
         shape_A.extend([m, k])
         shape_B.extend([k, n])
@@ -130,27 +128,17 @@ def array_pair(
     mm_broadcastable=False,
     same_shape=False,
 ):
-    assert not (same_shape and broadcastable), (
-        "Cannot be both same shape and broadcastable"
-    )
-    assert not (same_shape and mm_broadcastable), (
-        "Cannot be both same shape and mm_broadcastable"
-    )
+    assert not (same_shape and broadcastable), "Cannot be both same shape and broadcastable"
+    assert not (same_shape and mm_broadcastable), "Cannot be both same shape and mm_broadcastable"
     assert not (broadcastable and mm_broadcastable), (
         "Cannot be both broadcastable and mm_broadcastable"
     )
     if same_shape:
         return draw(_array_pair_same_shape(min_dims, max_dims, dtypes))
     elif broadcastable:
-        return draw(
-            _array_pair_broadcastable(
-                min_dims, max_dims, dtypes, mm_broadcastable=False
-            )
-        )
+        return draw(_array_pair_broadcastable(min_dims, max_dims, dtypes, mm_broadcastable=False))
     elif mm_broadcastable:
-        return draw(
-            _array_pair_broadcastable(min_dims, max_dims, dtypes, mm_broadcastable)
-        )
+        return draw(_array_pair_broadcastable(min_dims, max_dims, dtypes, mm_broadcastable))
     else:
         dtype = draw(st.sampled_from(dtypes))
         shape_A = draw(shape_nd(min_dims, max_dims))
@@ -163,6 +151,7 @@ def mat_vec_pair(draw):
     (m, n) = draw(shape_nd(min_num_dims=2, max_num_dims=2))
     dtype = draw(st.sampled_from(DTYPES))
     return _arrays([(m, n), (n,)], [dtype, dtype])
+
 
 @st.composite
 def mat_mat_pair(draw):
@@ -178,12 +167,11 @@ def dot_1d_pair(draw, dtypes=DTYPES):
     dtype = draw(st.sampled_from(dtypes))
     return _arrays([(n,), (n,)], [dtype, dtype])
 
+
 @st.composite
 def batch_mm(draw, dtypes=DTYPES):
     return draw(
-        _array_pair_broadcastable(
-            min_dims=1, max_dims=5, mm_broadcastable=True, dtypes=dtypes
-        )
+        _array_pair_broadcastable(min_dims=1, max_dims=5, mm_broadcastable=True, dtypes=dtypes)
     )
 
 
@@ -200,7 +188,9 @@ def positive_array(draw, shape: tuple[int, ...] | None = None, dtypes=FLOAT_DTYP
 
 @st.composite
 def prod_safe_array(draw, shape: tuple[int, ...] | None = None, dtypes=FLOAT_DTYPES):
-    """Array with values in (0.1, 1.0] so that product over many elements does not overflow."""
+    """Array with values in (0.1, 1.0] so that product over many elements does not
+    overflow.
+    """
     if shape is None:
         shape = draw(shape_nd(min_num_dims=1))
         if isinstance(shape, int):
@@ -284,13 +274,11 @@ def cat_arrays(draw, n: int = 2, min_dims=1, max_dims=MAX_NUM_DIMS, dtypes=DTYPE
     ndim = draw(st.integers(min_value=min_dims, max_value=max_dims))
     axis = draw(st.integers(0, ndim - 1))
     base_shape = tuple(
-        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
-        for _ in range(ndim)
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE)) for _ in range(ndim)
     )
     dtype = draw(st.sampled_from(dtypes))
     sizes_on_axis = [
-        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE))
-        for _ in range(n)
+        draw(st.integers(min_value=MIN_DIM_SIZE, max_value=MAX_DIM_SIZE)) for _ in range(n)
     ]
     shapes = [
         tuple(base_shape[j] if j != axis else sizes_on_axis[i] for j in range(ndim))
@@ -344,9 +332,7 @@ def slice_args(draw, dtypes=DTYPES, allow_negative_step=True):
     if isinstance(shape, int):
         shape = (shape,)
     arr = draw(generic_array(shape=shape, dtypes=dtypes))
-    key = draw(
-        slice_key(shape) if allow_negative_step else slice_key_positive_step(shape)
-    )
+    key = draw(slice_key(shape) if allow_negative_step else slice_key_positive_step(shape))
     return arr, key
 
 

@@ -1,10 +1,11 @@
 import numpygrad as npg
 
+
 def mse(
-    predictions: npg.array, 
-    targets: npg.array, 
-    reduction: str="mean", 
-    weight: npg.array | None = None
+    predictions: npg.array,
+    targets: npg.array,
+    reduction: str = "mean",
+    weight: npg.array | None = None,
 ) -> npg.array:
     if weight is not None:
         predictions = predictions * weight

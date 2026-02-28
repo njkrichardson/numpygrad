@@ -1,19 +1,19 @@
-from hypothesis import given
 import numpy as np
 import numpy.random as npr
 import torch
+from hypothesis import given
 
 import numpygrad as npg
 from tests.configuration import check_equality
 from tests.strategies import (
+    FLOAT_DTYPES,
+    cat_arrays,
     generic_array,
-    transpose_args,
     reshape_args,
     slice_args,
-    unsqueeze_args,
     stack_arrays,
-    cat_arrays,
-    FLOAT_DTYPES,
+    transpose_args,
+    unsqueeze_args,
 )
 
 npg.manual_seed(0)
@@ -194,7 +194,7 @@ def test_stack_backward(data):
         inputs=xts,
         grad_outputs=torch.ones_like(zt),
     )
-    for x, gxt in zip(xs, gxts):
+    for x, gxt in zip(xs, gxts, strict=False):
         assert x.grad is not None
         check_equality(x.grad, gxt.numpy())
 
@@ -225,6 +225,6 @@ def test_cat_backward(data):
         inputs=xts,
         grad_outputs=torch.ones_like(zt),
     )
-    for x, gxt in zip(xs, gxts):
+    for x, gxt in zip(xs, gxts, strict=False):
         assert x.grad is not None
         check_equality(x.grad, gxt.numpy())

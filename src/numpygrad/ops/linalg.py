@@ -1,11 +1,11 @@
 import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
-from numpygrad.core.registry import register, OperatorRequirements
-from numpygrad.core.opid import OperatorId
-from numpygrad.core.function import Function, Context
-from numpygrad.ops.core import ensure_array
 from numpygrad.core.broadcasting import reduce_grad_to_shape
+from numpygrad.core.function import Function
+from numpygrad.core.opid import OperatorId
+from numpygrad.core.registry import OperatorRequirements, register
+from numpygrad.ops.core import ensure_array
 
 
 @register(OperatorId.MATMUL)
@@ -93,6 +93,7 @@ class Matmul(Function):
 def mul_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Matmul.apply(a, b)
 
+
 @register(OperatorId.DOT)
 def dot_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     a, b = ensure_array(a), ensure_array(b)
@@ -101,6 +102,7 @@ def dot_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
         device="cpu_np",
         requires_grad=False,
     )
+
 
 class Dot(Function):
     @staticmethod
@@ -115,9 +117,11 @@ class Dot(Function):
         grad_b = grad_out * a.data
         return grad_a, grad_b
 
+
 @register(OperatorId.DOT, op_requirements=OperatorRequirements.Autograd)
 def dot_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Dot.apply(a, b)
+
 
 @register(OperatorId.NORM)
 def norm_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
@@ -127,6 +131,7 @@ def norm_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False)
         device="cpu_np",
         requires_grad=False,
     )
+
 
 class Norm(Function):
     @staticmethod
