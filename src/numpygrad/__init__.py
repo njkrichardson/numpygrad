@@ -23,6 +23,7 @@ from numpygrad.ops import (
     exp,
     flatten,
     log,
+    log_softmax,
     matmul,
     max,
     maximum,
@@ -37,6 +38,7 @@ from numpygrad.ops import (
     relu,
     reshape,
     setitem,
+    softmax,
     stack,
     sum,
     transpose,
@@ -91,4 +93,6 @@ __all__ = [
     "cat",
     "no_grad",
     "setitem",
+    "softmax",
+    "log_softmax",
 ]

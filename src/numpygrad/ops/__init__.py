@@ -1,3 +1,4 @@
+import numpygrad.ops.activations as activations
 import numpygrad.ops.elementwise as elementwise
 import numpygrad.ops.linalg as linalg
 import numpygrad.ops.reductions as reductions
@@ -7,6 +8,17 @@ from numpygrad.core.array import Array
 from numpygrad.core.dispatch import dispatch
 from numpygrad.core.opid import OperatorId
 from numpygrad.ops.core import ArrayCoercible
+
+# activations
+
+
+def softmax(a: ArrayCoercible, axis: int = -1) -> Array:
+    return dispatch(OperatorId.SOFTMAX, a, axis=axis)
+
+
+def log_softmax(a: ArrayCoercible, axis: int = -1) -> Array:
+    return dispatch(OperatorId.LOG_SOFTMAX, a, axis=axis)
+
 
 # elementwise
 
@@ -130,6 +142,10 @@ def setitem(a: ArrayCoercible, key: tuple[int, ...], value: ArrayCoercible) -> A
 
 
 __all__ = [
+    # activations
+    "activations",
+    "softmax",
+    "log_softmax",
     # special methods
     "special",
     "setitem",

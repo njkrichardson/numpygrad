@@ -27,6 +27,10 @@ class OperatorId(enum.StrEnum):
     DOT = enum.auto()
     NORM = enum.auto()
 
+    # activations
+    SOFTMAX = enum.auto()
+    LOG_SOFTMAX = enum.auto()
+
     # transforms
     TRANSPOSE = enum.auto()
     RESHAPE = enum.auto()

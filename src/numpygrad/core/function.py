@@ -1,5 +1,7 @@
 from typing import Any
 
+import numpy as np
+
 from numpygrad.core.array import Array
 from numpygrad.core.contexts import is_autograd_active
 from numpygrad.ops.core import ensure_array
@@ -24,6 +26,9 @@ class Context:
         self.b_shape: tuple[int, ...] = ()
         self.squeeze_a: bool = False
         self.squeeze_b: bool = False
+        self.reduction: str = ""
+        self.targets: np.ndarray | None = None
+        self.log_probs: np.ndarray | None = None
 
     def store(self, *arrays) -> None:
         self.saved_arrays = arrays
