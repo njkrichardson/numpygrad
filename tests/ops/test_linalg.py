@@ -181,6 +181,65 @@ def test_dot_2d_basic(arrs: tuple[np.ndarray, np.ndarray]):
 # assumes scalar grad_out.
 
 
+# --- matmul with 1D vectors ---
+
+
+def test_mm_1d_vec_times_matrix():
+    """1D @ 2D: vector-matrix product."""
+    A = np.random.randn(3).astype(np.float64)
+    B = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(A)
+    y = npg.array(B)
+    z = x @ y
+    check_equality(z.data, A @ B)
+
+
+def test_mm_matrix_times_1d_vec():
+    """2D @ 1D: matrix-vector product."""
+    A = np.random.randn(4, 3).astype(np.float64)
+    B = np.random.randn(3).astype(np.float64)
+    x = npg.array(A)
+    y = npg.array(B)
+    z = x @ y
+    check_equality(z.data, A @ B)
+
+
+def test_mm_1d_vec_times_matrix_backward():
+    """Backward through 1D @ 2D."""
+    A = np.random.randn(3).astype(np.float64)
+    B = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = x @ y
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = xt @ yt
+    gxt, gyt = torch.autograd.grad(zt, (xt, yt), grad_outputs=torch.ones_like(zt))
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
+def test_mm_matrix_times_1d_vec_backward():
+    """Backward through 2D @ 1D."""
+    A = np.random.randn(4, 3).astype(np.float64)
+    B = np.random.randn(3).astype(np.float64)
+    x = npg.array(A, requires_grad=True)
+    y = npg.array(B, requires_grad=True)
+    z = x @ y
+    z.backward()
+
+    xt = torch.from_numpy(A).requires_grad_(True)
+    yt = torch.from_numpy(B).requires_grad_(True)
+    zt = xt @ yt
+    gxt, gyt = torch.autograd.grad(zt, (xt, yt), grad_outputs=torch.ones_like(zt))
+    assert x.grad is not None and y.grad is not None
+    check_equality(x.grad, gxt.numpy())
+    check_equality(y.grad, gyt.numpy())
+
+
 # --- norm ---
 
 

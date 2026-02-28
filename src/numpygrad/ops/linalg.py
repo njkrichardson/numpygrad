@@ -76,15 +76,16 @@ class Matmul(Function):
         grad_a = np.matmul(grad_data, np.swapaxes(b_data, -1, -2))
         grad_b = np.matmul(np.swapaxes(a_data, -1, -2), grad_data)
 
-        # reduce broadcasted axes
-        grad_a = reduce_grad_to_shape(grad_a, a_shape)
-        grad_b = reduce_grad_to_shape(grad_b, b_shape)
-
-        # squeeze back if original inputs were 1D (only if we still have the added dim)
+        # squeeze back if original inputs were 1D — must happen before
+        # reduce_grad_to_shape so the unit dim isn't mistaken for a broadcast axis
         if len(a_shape) == 1 and grad_a.ndim >= 2 and grad_a.shape[0] == 1:
             grad_a = grad_a.squeeze(0)
         if len(b_shape) == 1 and grad_b.ndim >= 2 and grad_b.shape[-1] == 1:
             grad_b = grad_b.squeeze(-1)
+
+        # reduce broadcasted axes
+        grad_a = reduce_grad_to_shape(grad_a, a_shape)
+        grad_b = reduce_grad_to_shape(grad_b, b_shape)
 
         return grad_a, grad_b
 
