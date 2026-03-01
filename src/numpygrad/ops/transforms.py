@@ -356,6 +356,7 @@ class Repeat(Function):
             grad_flat = grad.reshape(-1, repeats).sum(axis=1)
             return grad_flat.reshape(input_shape), None, None
         else:
+            assert isinstance(axis, int)
             n = input_shape[axis]
             indices = np.arange(0, n * repeats, repeats)
             return np.add.reduceat(grad, indices, axis=axis), None, None

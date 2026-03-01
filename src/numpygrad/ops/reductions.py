@@ -344,6 +344,7 @@ class CumSum(Function):
             flat_grad = np.flip(np.cumsum(np.flip(grad)))
             return flat_grad.reshape(ctx.input_shape), None
         else:
+            assert isinstance(axis, int)
             return np.flip(np.cumsum(np.flip(grad, axis=axis), axis=axis), axis=axis), None
 
 
@@ -387,6 +388,7 @@ class CumProd(Function):
             rev_cs = rev_cs.reshape(ctx.input_shape)
             a_data = a.data
         else:
+            assert isinstance(axis, int)
             rev_cs = np.flip(np.cumsum(np.flip(product, axis=axis), axis=axis), axis=axis)
             a_data = a.data
 
