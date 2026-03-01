@@ -10,7 +10,7 @@ from examples.classification_2d.visuals import (
     plot_final_decision,
     plot_initial_decision,
 )
-from numpygrad.utils.data import DataLoader
+from numpygrad.utils.data import DataLoader, TensorDataset
 
 np.manual_seed(0)
 Log = np.Log(__name__)
@@ -30,18 +30,30 @@ parser.add_argument(
     action="store_true",
     help="Only generate initial decision plot, no training or final plot",
 )
+parser.add_argument(
+    "--test-split",
+    type=float,
+    default=0.2,
+    help="Fraction of examples to hold out as the test set (0..1)",
+)
 
 
 def main(args: argparse.Namespace):
     dataset = PinwheelDataset(
         num_classes=args.num_classes,
         samples_per_class=args.samples_per_class,
-        radial_std=0.35,
-        tangential_std=0.09,
-        rate=0.4,
+        radial_std=0.3,
+        tangential_std=0.05,
+        rate=0.35,
         snr_db=10.0,
     )
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+    n = len(dataset)
+    n_test = int(n * args.test_split)
+    n_train = n - n_test
+    train_dataset = TensorDataset(dataset.data.data[:n_train], dataset.targets.data[:n_train])
+    test_dataset = TensorDataset(dataset.data.data[n_train:], dataset.targets.data[n_train:])
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
     class Classifier(nn.Module):
         def __init__(self, input_dim: int, output_dim: int, hidden_dim: int):
@@ -59,20 +71,24 @@ def main(args: argparse.Namespace):
             return x
 
     @np.no_grad()
-    def estimate_loss(num_batches: int) -> float:
+    def estimate_loss(num_batches: int, loader=None) -> float:
+        if loader is None:
+            loader = train_dataloader
         losses = []
         for _ in range(num_batches):
-            x, y = next(iter(dataloader))
+            x, y = next(iter(loader))
             out = net(x)
             loss = nn.cross_entropy_loss(out, y)
             losses.append(loss.item())
         return np.mean(np.array(losses)).item()
 
     @np.no_grad()
-    def estimate_accuracy(num_batches: int) -> float:
+    def estimate_accuracy(num_batches: int, loader=None) -> float:
+        if loader is None:
+            loader = train_dataloader
         correct = 0
         for _ in range(num_batches):
-            x, y = next(iter(dataloader))
+            x, y = next(iter(loader))
             out = net(x)
             correct += np.sum(np.argmax(out, axis=1) == y).item()
         return correct / (num_batches * args.batch_size)
@@ -99,15 +115,15 @@ def main(args: argparse.Namespace):
         e = np.exp(logits)
         return (e / e.sum(1, keepdims=True)).numpy()
 
-    X_train = dataset.data
+    X_train = train_dataset.data
 
     plot_initial_decision(X_train, predict_proba)
-    plot_dataset_scatter(dataset, X_train, dataset.targets)
+    plot_dataset_scatter(train_dataset, X_train, train_dataset.targets)
     if args.initial_plot_only:
         return
 
     for step in range(args.num_steps):
-        x, y = next(iter(dataloader))
+        x, y = next(iter(train_dataloader))
         optimizer.zero_grad()
         out = net(x)
         loss = nn.cross_entropy_loss(out, y)
@@ -119,8 +135,17 @@ def main(args: argparse.Namespace):
                 accuracy={estimate_accuracy(args.num_estimate_loss_batches) * 100:0.2f}%"
             )
 
-    Log.info(f"Final loss: {estimate_loss(args.num_estimate_loss_batches):0.2f}")
-    Log.info(f"Final accuracy: {estimate_accuracy(args.num_estimate_loss_batches) * 100:0.2f}%")
+    Log.info(f"Final train loss: {estimate_loss(args.num_estimate_loss_batches):0.2f}")
+    Log.info(
+        f"Final test loss: {estimate_loss(args.num_estimate_loss_batches, test_dataloader):0.2f}"
+    )
+    Log.info(
+        f"Final train accuracy: {estimate_accuracy(args.num_estimate_loss_batches) * 100:0.2f}%"
+    )
+    Log.info(
+        f"Final test accuracy: "
+        f"{estimate_accuracy(args.num_estimate_loss_batches, test_dataloader) * 100:0.2f}%"
+    )
 
     plot_final_decision(X_train, predict_proba)
 
