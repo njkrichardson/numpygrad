@@ -104,10 +104,12 @@ def test_setitem_mutation():
     assert x.data[1] == 99.0
 
 
-def test_setitem_raises_for_requires_grad():
+def test_setitem_mutates_requires_grad_and_increments_version():
     x = npg.array(np.array([1.0, 2.0]), requires_grad=True)
-    with pytest.raises(RuntimeError, match="require grad"):
-        x[0] = 5.0
+    v0 = x._version
+    x[0] = 5.0
+    assert x.data[0] == 5.0
+    assert x._version == v0 + 1
 
 
 def test_functional_setitem():

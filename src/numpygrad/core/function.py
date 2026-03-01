@@ -9,7 +9,8 @@ from numpygrad.ops.core import ensure_array
 
 class Context:
     def __init__(self):
-        self.saved_arrays: tuple[Array, ...] = ()
+        self._saved_arrays: tuple[Array, ...] = ()
+        self._saved_versions: tuple[int, ...] = ()
         # Optional attributes set by individual ops in forward(), read in backward().
         # Using explicit fields so mypy knows they exist on Context.
         self.axis: int | tuple[int, ...] | None = None
@@ -20,8 +21,6 @@ class Context:
         self.original_shapes: tuple[tuple[int, ...], ...] = ()
         self.sizes: tuple[int, ...] = ()
         self.count: int | float = 0
-        self.a: Array | None = None
-        self.b: Array | None = None
         self.a_shape: tuple[int, ...] = ()
         self.b_shape: tuple[int, ...] = ()
         self.squeeze_a: bool = False
@@ -34,7 +33,17 @@ class Context:
         self.input_shape: tuple[int, ...] = ()
 
     def store(self, *arrays) -> None:
-        self.saved_arrays = arrays
+        self._saved_arrays = arrays
+        self._saved_versions = tuple(a._version if isinstance(a, Array) else -1 for a in arrays)
+
+    @property
+    def saved_arrays(self) -> tuple[Array, ...]:
+        for arr, v in zip(self._saved_arrays, self._saved_versions, strict=True):
+            if isinstance(arr, Array) and v != -1 and arr._version != v:
+                raise RuntimeError(
+                    "A tensor saved for backward was mutated by an in-place operation."
+                )
+        return self._saved_arrays
 
 
 class Function:

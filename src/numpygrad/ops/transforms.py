@@ -7,6 +7,7 @@ from numpygrad.core.broadcasting import unbroadcast
 from numpygrad.core.function import Context, Function
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.registry import OperatorRequirements, register
+from numpygrad.core.version import _shares_buffer
 from numpygrad.ops.core import ensure_array
 
 
@@ -26,10 +27,14 @@ class Transpose(Function):
         a = ensure_array(a)
         ctx.axes = axes
 
+        out_data = np.transpose(a.data, axes=axes)
+        # np.transpose always returns a view
+        vc = a._version_counter if _shares_buffer(out_data, a.data) else None
         return Array(
-            np.transpose(a.data, axes=axes),
+            out_data,
             device=a.device,
             requires_grad=a.requires_grad,
+            version_counter=vc,
         )
 
     @staticmethod
@@ -60,10 +65,13 @@ class Reshape(Function):
         a = ensure_array(a)
         ctx.store(a)
 
+        out_data = np.reshape(a.data, shape=new_shape)
+        vc = a._version_counter if _shares_buffer(out_data, a.data) else None
         return Array(
-            np.reshape(a.data, shape=new_shape),
+            out_data,
             device=a.device,
             requires_grad=a.requires_grad,
+            version_counter=vc,
         )
 
     @staticmethod
@@ -105,19 +113,21 @@ class Slice(Function):
         key = normalize_key(key)
         a = ensure_array(a)
 
-        ctx.store(a)
+        ctx.input_shape = a.shape  # backward only needs shape, not data
         ctx.key = key
 
+        out_data = a.data[key]
+        vc = a._version_counter if _shares_buffer(out_data, a.data) else None
         return Array(
-            a.data[key],
+            out_data,
             device=a.device,
             requires_grad=a.requires_grad,
+            version_counter=vc,
         )
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
-        a = ctx.saved_arrays[0]
-        grad_a = np.zeros_like(a.data, dtype=grad.dtype)
+        grad_a = np.zeros(ctx.input_shape, dtype=grad.dtype)
         grad_a[ctx.key] = grad
         return (grad_a, None)
 
@@ -175,10 +185,13 @@ class Flatten(Function):
         a = ensure_array(a)
         ctx.store(a)
 
+        out_data = np.ravel(a.data)
+        vc = a._version_counter if _shares_buffer(out_data, a.data) else None
         return Array(
-            np.ravel(a.data),
+            out_data,
             device=a.device,
             requires_grad=a.requires_grad,
+            version_counter=vc,
         )
 
     @staticmethod

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -95,14 +94,13 @@ def test_setitem_functional_backward_basic():
     np.testing.assert_allclose(b.grad, np.ones_like(b.data))
 
 
-def test_array_setitem_requires_grad_raises():
+def test_array_setitem_requires_grad_mutates_and_increments_version():
     x = npg.ones((3, 3), requires_grad=True)
     b = npg.ones((3,), requires_grad=True)
-
-    with pytest.raises(
-        RuntimeError, match="__setitem__ on Arrays that require grad is not supported"
-    ):
-        x[:, 0] = b
+    v0 = x._version
+    x[:, 0] = b
+    assert np.all(x.data[:, 0] == 1.0)
+    assert x._version == v0 + 1
 
 
 @st.composite

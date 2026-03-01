@@ -3,6 +3,7 @@ import numpy as np
 from numpygrad.core.device import DeviceId
 from numpygrad.core.dispatch import dispatch
 from numpygrad.core.opid import OperatorId
+from numpygrad.core.version import VersionCounter
 
 type ArrayCoercible = "np.ndarray | int | float | \
 list[int | float] | tuple[int | float] | Array | tuple[int, ...] | \
@@ -18,6 +19,7 @@ class Array:
         requires_grad: bool = False,
         label: str = "",
         dtype: np.dtype | None = None,
+        version_counter: VersionCounter | None = None,
     ):
         if isinstance(data, (int, float)):
             data = np.array(data)
@@ -34,6 +36,9 @@ class Array:
         if dtype is not None:
             self.data = self.data.astype(dtype)
 
+        self._version_counter: VersionCounter = (
+            version_counter if version_counter is not None else VersionCounter()
+        )
         self.device: DeviceId = DeviceId(device)
 
         if self.dtype != np.float32 and self.dtype != np.float64 and requires_grad:
@@ -45,6 +50,10 @@ class Array:
         self.ctx = None
         self.parents = ()
         self.label = label
+
+    @property
+    def _version(self) -> int:
+        return self._version_counter.version
 
     def numpy(self) -> np.ndarray:
         return self.data
@@ -89,21 +98,11 @@ class Array:
     def __setitem__(
         self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible
     ) -> None:
-        # In-place mutation on Arrays that participate in autograd is not supported.
-        # Use the functional setitem op instead (numpygrad.ops.setitem or
-        # Array.setitem).
-        from numpygrad.ops.core import (
-            ensure_array,
-        )  # local import to avoid circular dependency
+        from numpygrad.ops.core import ensure_array  # local import to avoid circular dependency
+        from numpygrad.ops.transforms import normalize_key
 
-        if self.requires_grad or ensure_array(value).requires_grad:
-            raise RuntimeError(
-                "__setitem__ on Arrays that require grad is not supported; "
-                "use a functional setitem operation instead."
-            )
-
-        result = dispatch(OperatorId.SETITEM, self, key, value)
-        self.data = result.data
+        self.data[normalize_key(key)] = ensure_array(value).data
+        self._version_counter.increment()
 
     def setitem(self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible):
         return dispatch(OperatorId.SETITEM, self, key, value)

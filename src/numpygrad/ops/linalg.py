@@ -21,8 +21,7 @@ def mm_cpu(a: ArrayCoercible, b: ArrayCoercible) -> Array:
 class Matmul(Function):
     @staticmethod
     def forward(ctx, a: Array, b: Array) -> Array:
-        ctx.a = a
-        ctx.b = b
+        ctx.store(a, b)
         # save original shapes for backward
         ctx.a_shape = a.data.shape
         ctx.b_shape = b.data.shape
@@ -52,14 +51,12 @@ class Matmul(Function):
 
     @staticmethod
     def backward(ctx, grad_out: np.ndarray):
-        a = ctx.a
-        b = ctx.b
+        a, b = ctx.saved_arrays
 
         # forward shapes
         a_shape = ctx.a_shape
         b_shape = ctx.b_shape
 
-        # make copies for computation
         a_data = a.data
         b_data = b.data
         grad_data = grad_out
