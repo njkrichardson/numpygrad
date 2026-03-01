@@ -22,7 +22,7 @@ parser.add_argument("--report-every", type=int, default=50)
 parser.add_argument("--batch-size", type=int, default=512)
 parser.add_argument("--hidden-dim", type=int, default=64)
 parser.add_argument("--num-classes", type=int, default=5)
-parser.add_argument("--samples-per-class", type=int, default=1_024)
+parser.add_argument("--samples-per-class", type=int, default=512)
 parser.add_argument("--num-estimate-loss-batches", type=int, default=32)
 parser.add_argument("--plot", action="store_true")
 parser.add_argument(

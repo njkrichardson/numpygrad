@@ -1,4 +1,5 @@
 import numpygrad.ops.activations as activations
+import numpygrad.ops.conv as conv
 import numpygrad.ops.elementwise as elementwise
 import numpygrad.ops.linalg as linalg
 import numpygrad.ops.reductions as reductions
@@ -146,6 +147,22 @@ def norm(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> 
 
 matmul = mm
 
+
+# convolution
+
+
+def conv2d(
+    input: ArrayCoercible,
+    weight: ArrayCoercible,
+    bias: ArrayCoercible | None = None,
+    stride: int | tuple[int, int] = 1,
+    padding: int | tuple[int, int] = 0,
+) -> Array:
+    _s: tuple[int, int] = (stride, stride) if isinstance(stride, int) else stride
+    _p: tuple[int, int] = (padding, padding) if isinstance(padding, int) else padding
+    return dispatch(OperatorId.CONV2D, input, weight, bias, _s, _p)
+
+
 # special methods
 
 
@@ -195,4 +212,7 @@ __all__ = [
     "matmul",
     "dot",
     "norm",
+    # convolution
+    "conv",
+    "conv2d",
 ]

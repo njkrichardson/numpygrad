@@ -1,18 +1,18 @@
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as onp
-from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
 import numpygrad as np
+from examples.utils.optional_mpl import (
+    HAS_MATPLOTLIB,
+    LinearSegmentedColormap,
+    ListedColormap,
+    plt,
+)
 
 Log = np.Log(__name__)
 EXPERIMENT_DIR = Path(__file__).parent
 MEDIA_DIR = EXPERIMENT_DIR / "media"
-MEDIA_DIR.mkdir(exist_ok=True)
 
 
 # Same color palette as original (plain numpy for plotting)
@@ -96,10 +96,12 @@ def plot_decision(ax, X, predict_proba, gridsize=75, border=0.15):
 
 
 def plot_initial_decision(X_train, predict_proba):
+    if not HAS_MATPLOTLIB:
+        return
+    MEDIA_DIR.mkdir(exist_ok=True)
     save_path = MEDIA_DIR / "classification_2d_initial.png"
     _, ax = plt.subplots(figsize=(5, 5))
     plot_decision(ax, X_train, predict_proba)
-    plt.title("Initial classifier decision plot")
     plt.tight_layout()
     plt.xticks([])
     plt.yticks([])
@@ -109,6 +111,9 @@ def plot_initial_decision(X_train, predict_proba):
 
 
 def plot_dataset_scatter(dataset, X_train, y_train):
+    if not HAS_MATPLOTLIB:
+        return
+    MEDIA_DIR.mkdir(exist_ok=True)
     # Dark palette (RGB 0-255 → 0-1)
     colors = [
         [106 / 255, 61 / 255, 154 / 255],
@@ -119,14 +124,20 @@ def plot_dataset_scatter(dataset, X_train, y_train):
     ]
     cmap = ListedColormap(colors)
 
-    plt.figure(figsize=(12, 12))
+    num_samples: int = min(len(dataset.data.numpy()), 2048)
+    indices = onp.random.choice(len(dataset.data.numpy()), num_samples, replace=False)
+    data = dataset.data[indices]
+    targets = dataset.targets[indices]
+
+    plt.figure(figsize=(5, 5))
     plt.scatter(
-        dataset.data[:, 0].numpy(),
-        dataset.data[:, 1].numpy(),
-        c=dataset.targets.numpy(),
+        data[:, 0].numpy(),
+        data[:, 1].numpy(),
+        c=targets.numpy(),
         cmap=cmap,
+        marker="o",
+        s=5,
     )
-    plt.title("Dataset scatter plot")
     plt.tight_layout()
     plt.xticks([])
     plt.yticks([])
@@ -137,10 +148,12 @@ def plot_dataset_scatter(dataset, X_train, y_train):
 
 
 def plot_final_decision(X_train, predict_proba):
+    if not HAS_MATPLOTLIB:
+        return
+    MEDIA_DIR.mkdir(exist_ok=True)
     save_path_final = MEDIA_DIR / "classification_2d_final.png"
-    fig, ax = plt.subplots(figsize=(5, 5))
+    _, ax = plt.subplots(figsize=(5, 5))
     plot_decision(ax, X_train, predict_proba)
-    plt.title("Final classifier decision plot")
     plt.tight_layout()
     plt.xticks([])
     plt.yticks([])

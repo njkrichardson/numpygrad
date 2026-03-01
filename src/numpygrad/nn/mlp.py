@@ -15,6 +15,7 @@ class MLP(Module):
         super().__init__()
         dims = [input_dim] + hidden_sizes + [output_dim]
 
+        act: Module
         if activation == "relu":
             act = ReLU()
         elif activation == "tanh":
@@ -31,6 +32,7 @@ class MLP(Module):
             if i < len(pairs) - 1:
                 layers.append(act)
         self.layers = Sequential(*layers)
+        self.act = act
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"

@@ -44,6 +44,9 @@ class OperatorId(enum.StrEnum):
     STACK = enum.auto()
     CAT = enum.auto()
 
+    # convolution
+    CONV2D = enum.auto()
+
     # special methods
     GT = enum.auto()
     LT = enum.auto()

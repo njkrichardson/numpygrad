@@ -19,6 +19,7 @@ from numpygrad.ops import (
     argmax,
     cat,
     clip,
+    conv2d,
     dot,
     exp,
     flatten,
@@ -101,4 +102,5 @@ __all__ = [
     "sigmoid",
     "tanh",
     "softplus",
+    "conv2d",
 ]

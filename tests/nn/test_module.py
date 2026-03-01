@@ -161,6 +161,21 @@ def test_mlp_repr():
     assert "MLP" in r
 
 
+def test_mlp_default_activation():
+    model = MLP(4, [8], 2)
+    assert model.act is not None
+
+
+def test_mlp_tanh_activation():
+    model = MLP(4, [8], 2, activation="tanh")
+    assert model.act is not None
+
+
+def test_mlp_sigmoid_activation():
+    model = MLP(4, [8], 2, activation="sigmoid")
+    assert model.act is not None
+
+
 def test_mlp_bad_activation():
     with pytest.raises(ValueError, match="not supported"):
-        MLP(4, [8], 2, activation="tanh")
+        MLP(4, [8], 2, activation="not implemented")

@@ -15,7 +15,7 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 - **Define-by-run autograd** — Builds a computation graph as ops are invoked (i.e., Torch eager).
 - **Familiar array API** — `array` with `shape`, `ndim`, `dtype` etc.
 - **Familiar array creation** - `ones`, `zeros`, `arange`, `randn`, etc.
-- **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`, `with ngp.no_grad():`, etc.
+- **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`, `no_grad()`, etc.
 - **Basic NN Modules and Optimizers** - `Linear`, `MLP`, `SGD`, etc.
 - **Broadcasting & batched ops** — Linear algebra, reductions, transforms, and elementwise ops support batched and broadcasted shapes.
 - **Familiar special methods** - `x @ y`, `mask = x > 0`, etc.
@@ -61,16 +61,34 @@ loss.backward()
 optimizer.step()
 ```
 
-## Example: 1D regression
+## Examples
 
-The `examples/` directory includes a regression demo that fits an MLP to a noisy sine wave.
-Not counting argument parsing and plotting, the core part of the code is only ~40 lines. 
+The `examples/` directory includes demos that run with only the core install (NumPy +
+numpygrad). You can run them without installing the `[examples]` extra:
+
+```bash
+python -m examples.regression_1d.main   # use --help for CLI options
+python -m examples.classification_2d.main
+```
+
+If **matplotlib** is not installed, training and evaluation run as usual but no figures
+are generated. Install the examples extra to enable plotting:
+
+```bash
+pip install -e ".[examples]"   # adds matplotlib
+```
+
+### Scalar Regression
 
 ```bash
 python -m examples.regression_1d.main # use --help for cli arg descriptions
 ```
 
-This trains a small MLP and saves a plot of the fit under `media/`.
+### 2d Classification 
+
+```bash
+python -m examples.classification_2d.main # use --help for cli arg descriptions
+```
 
 ## Project layout
 

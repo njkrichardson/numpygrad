@@ -29,6 +29,9 @@ class Context:
         self.reduction: str = ""
         self.targets: np.ndarray | None = None
         self.log_probs: np.ndarray | None = None
+        self.stride: tuple[int, int] = (1, 1)
+        self.padding: tuple[int, int] = (0, 0)
+        self.input_shape: tuple[int, ...] = ()
 
     def store(self, *arrays) -> None:
         self.saved_arrays = arrays
