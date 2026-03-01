@@ -11,14 +11,20 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 
 ## Features
 
+### Autograd
 - **NumPy-only** — Single dependency: NumPy. 
 - **Define-by-run autograd** — Builds a computation graph as ops are invoked (i.e., Torch eager).
 - **Familiar array API** — `array` with `shape`, `ndim`, `dtype` etc.
 - **Familiar array creation** - `ones`, `zeros`, `arange`, `randn`, etc.
-- **Familiar NN API** - `.backward()`, `requires_grad`, `.grad`, `no_grad()`, etc.
-- **Basic NN Modules and Optimizers** - `Linear`, `MLP`, `SGD`, etc.
+- **Familiar torch autograd API** - `.backward()`, `requires_grad`, `.grad`, `no_grad()`, etc.
 - **Broadcasting & batched ops** — Linear algebra, reductions, transforms, and elementwise ops support batched and broadcasted shapes.
 - **Familiar special methods** - `x @ y`, `mask = x > 0`, etc.
+
+### Neural Nets
+- **Modules** - `Linear`, `Conv2d`, `MultiHeadAttention`, etc.
+- **Optimizers** - `AdamW`, `SGD`.
+- **Activations** - `ReLU`, `Tanh`, `Sigmoid`. 
+- **Losses** - `CrossEntropy`, `mse`. 
 
 ## Installation
 
