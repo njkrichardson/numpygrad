@@ -1,0 +1,5 @@
+#!/bin/bash
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ "$branch" = "main" ]; then
+    pytest --maxfail=1 --disable-warnings
+fi
