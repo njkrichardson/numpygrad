@@ -103,6 +103,29 @@ def argmax(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
     return dispatch(OperatorId.ARGMAX, a, axis=axis, keepdims=keepdims)
 
 
+def var(a: ArrayCoercible, axis=None, ddof: int = 0, keepdims: bool = False) -> Array:
+    return dispatch(OperatorId.VAR, a, axis=axis, ddof=ddof, keepdims=keepdims)
+
+
+def std(a: ArrayCoercible, axis=None, ddof: int = 0, keepdims: bool = False) -> Array:
+    return var(a, axis=axis, ddof=ddof, keepdims=keepdims) ** 0.5
+
+
+def sqrt(a: ArrayCoercible) -> Array:
+    from numpygrad.core.array import Array as _Array
+
+    arr = a if isinstance(a, _Array) else _Array(a)
+    return arr**0.5
+
+
+def cumsum(a: ArrayCoercible, axis=None) -> Array:
+    return dispatch(OperatorId.CUMSUM, a, axis=axis)
+
+
+def cumprod(a: ArrayCoercible, axis=None) -> Array:
+    return dispatch(OperatorId.CUMPROD, a, axis=axis)
+
+
 # transforms
 
 
@@ -120,6 +143,14 @@ def reshape(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Array:
 
 def flatten(a: ArrayCoercible) -> Array:
     return dispatch(OperatorId.FLATTEN, a)
+
+
+def squeeze(a: ArrayCoercible, axis=None) -> Array:
+    return dispatch(OperatorId.SQUEEZE, a, axis=axis)
+
+
+def repeat(a: ArrayCoercible, repeats: int, axis=None) -> Array:
+    return dispatch(OperatorId.REPEAT, a, repeats=repeats, axis=axis)
 
 
 def stack(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
@@ -143,6 +174,17 @@ def dot(a: ArrayCoercible, b: ArrayCoercible) -> Array:
 
 def norm(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return dispatch(OperatorId.NORM, a, axis=axis, keepdims=keepdims)
+
+
+def diagonal(a: ArrayCoercible, offset: int = 0, axis1: int = 0, axis2: int = 1) -> Array:
+    return dispatch(OperatorId.DIAGONAL, a, offset=offset, axis1=axis1, axis2=axis2)
+
+
+def trace(a: ArrayCoercible, offset: int = 0) -> Array:
+    from numpygrad.core.array import Array as _Array
+
+    arr = a if isinstance(a, _Array) else _Array(a)
+    return arr.diagonal(offset=offset).sum()
 
 
 matmul = mm
@@ -199,6 +241,8 @@ __all__ = [
     "unsqueeze",
     "reshape",
     "flatten",
+    "squeeze",
+    "repeat",
     "stack",
     "cat",
     "transforms",
@@ -206,12 +250,19 @@ __all__ = [
     "reductions",
     "mean",
     "prod",
+    "var",
+    "std",
+    "sqrt",
+    "cumsum",
+    "cumprod",
     # linear algebra
     "linalg",
     "mm",
     "matmul",
     "dot",
     "norm",
+    "diagonal",
+    "trace",
     # convolution
     "conv",
     "conv2d",

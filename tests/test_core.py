@@ -265,3 +265,106 @@ def test_no_grad_decorator():
     y = f(x)
     assert y.grad_fn is None
     assert not y.requires_grad
+
+
+# ---------------------------------------------------------------------------
+# New attributes: itemsize, strides
+# ---------------------------------------------------------------------------
+
+
+def test_itemsize():
+    x = Array(np.ones((3, 4), dtype=np.float64))
+    assert x.itemsize == 8  # float64 = 8 bytes
+
+
+def test_strides():
+    x = Array(np.ones((3, 4), dtype=np.float64))
+    assert x.strides == x.data.strides
+
+
+# ---------------------------------------------------------------------------
+# New simple-wrapper methods
+# ---------------------------------------------------------------------------
+
+
+def test_tolist():
+    x = Array(np.array([1.0, 2.0, 3.0]))
+    result = x.tolist()
+    assert result == [1.0, 2.0, 3.0]
+    assert isinstance(result, list)
+
+
+def test_nonzero():
+    x = Array(np.array([0.0, 1.0, 0.0, 2.0]))
+    indices = x.nonzero()
+    assert len(indices) == 1  # 1D → 1-tuple
+    np.testing.assert_array_equal(indices[0].data, np.array([1, 3]))
+
+
+def test_astype_keeps_requires_grad_for_float():
+    x = Array(np.array([1.0, 2.0], dtype=np.float64), requires_grad=True)
+    y = x.astype(np.float32)
+    assert y.dtype == np.float32
+    assert y.requires_grad  # float → float keeps requires_grad
+
+
+def test_astype_drops_requires_grad_for_int():
+    x = Array(np.array([1.0, 2.0], dtype=np.float64), requires_grad=True)
+    y = x.astype(np.int32)
+    assert y.dtype == np.int32
+    assert not y.requires_grad  # float → int drops requires_grad
+
+
+def test_all():
+    x = Array(np.array([True, True, True]))
+    assert x.all().data
+    x2 = Array(np.array([True, False, True]))
+    assert not x2.all().data
+
+
+def test_any():
+    x = Array(np.array([False, False, False]))
+    assert not x.any().data
+    x2 = Array(np.array([False, True, False]))
+    assert x2.any().data
+
+
+def test_fill():
+    x = Array(np.zeros(5))
+    v0 = x._version
+    x.fill(7.0)
+    np.testing.assert_array_equal(x.data, np.full(5, 7.0))
+    assert x._version == v0 + 1
+
+
+def test_sort_inplace():
+    arr = np.array([3.0, 1.0, 4.0, 1.0, 5.0])
+    x = Array(arr.copy())
+    v0 = x._version
+    x.sort()
+    np.testing.assert_array_equal(x.data, np.sort(arr))
+    assert x._version == v0 + 1
+
+
+def test_round():
+    x = Array(np.array([1.456, 2.789, 3.123]))
+    y = x.round(decimals=1)
+    np.testing.assert_array_almost_equal(y.data, [1.5, 2.8, 3.1])
+    assert not y.requires_grad  # round has no useful gradient
+
+
+# ---------------------------------------------------------------------------
+# std: composition via var
+# ---------------------------------------------------------------------------
+
+
+def test_std_method():
+    arr = np.array([1.0, 2.0, 3.0, 4.0])
+    x = Array(arr, requires_grad=False)
+    np.testing.assert_almost_equal(x.std().data, np.std(arr))
+
+
+def test_std_functional():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    np.testing.assert_almost_equal(npg.std(x).data, np.std(arr))

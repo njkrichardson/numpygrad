@@ -294,3 +294,155 @@ def test_argmax_axis(data):
     z = npg.argmax(x, axis=axis, keepdims=keepdims)
     reference = np.argmax(arr, axis=axis, keepdims=keepdims)
     check_equality(z.data, reference)
+
+
+# --- var ---
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_var_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.var()
+    check_equality(z.data, np.var(arr))
+
+
+@given(reduction_args(dtypes=FLOAT_DTYPES))
+def test_var_axis_keepdims(data):
+    arr, axis, keepdims = data
+    x = npg.array(arr)
+    z = x.var(axis=axis, keepdims=keepdims)
+    check_equality(z.data, np.var(arr, axis=axis, keepdims=keepdims))
+
+
+@given(reduction_args(dtypes=FLOAT_DTYPES))
+def test_var_backward(data):
+    arr, axis, keepdims = data
+    x = npg.array(arr, requires_grad=True)
+    z = x.var(axis=axis, keepdims=keepdims)
+    z.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    if axis is None:
+        zt = xt.var(unbiased=False)
+    else:
+        zt = xt.var(dim=axis, unbiased=False, keepdim=keepdims)
+    gxt = torch.autograd.grad(zt, xt, grad_outputs=torch.ones_like(zt))[0]
+    assert x.grad is not None
+    check_equality(x.grad, gxt.numpy())
+
+
+def test_var_ddof():
+    arr = np.array([1.0, 2.0, 3.0, 4.0])
+    x = npg.array(arr)
+    check_equality(x.var(ddof=1).data, np.var(arr, ddof=1))
+
+
+def test_var_functional():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.var(x).data, np.var(arr))
+
+
+# --- cumsum ---
+
+
+@given(generic_array(dtypes=FLOAT_DTYPES))
+def test_cumsum_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.cumsum()
+    check_equality(z.data, np.cumsum(arr))
+
+
+@given(reduction_args(dtypes=FLOAT_DTYPES, with_axis=True))
+def test_cumsum_axis(data):
+    arr, axis, _ = data
+    x = npg.array(arr)
+    z = x.cumsum(axis=axis)
+    check_equality(z.data, np.cumsum(arr, axis=axis))
+
+
+def test_cumsum_backward_axis():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    for axis in [0, 1]:
+        x = npg.array(arr, requires_grad=True)
+        y = x.cumsum(axis=axis)
+        y.sum().backward()
+
+        xt = torch.from_numpy(arr).requires_grad_(True)
+        yt = xt.cumsum(dim=axis)
+        yt.sum().backward()
+        assert x.grad is not None
+        check_equality(x.grad, xt.grad.numpy())
+
+
+def test_cumsum_backward_flat():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    y = x.cumsum()
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.flatten().cumsum(dim=0)
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy().reshape(arr.shape))
+
+
+def test_cumsum_functional():
+    arr = np.random.randn(4).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.cumsum(x).data, np.cumsum(arr))
+
+
+# --- cumprod ---
+
+
+@given(prod_safe_array())
+def test_cumprod_basic(arr: np.ndarray):
+    x = npg.array(arr)
+    z = x.cumprod()
+    check_equality(z.data, np.cumprod(arr))
+
+
+@given(reduction_args(dtypes=FLOAT_DTYPES, with_axis=True))
+def test_cumprod_axis(data):
+    arr, axis, _ = data
+    # Use positive values to avoid overflow/zero issues in cumprod
+    arr = np.abs(arr).astype(arr.dtype) + 0.1
+    x = npg.array(arr)
+    z = x.cumprod(axis=axis)
+    check_equality(z.data, np.cumprod(arr, axis=axis))
+
+
+def test_cumprod_backward_axis():
+    # Positive non-zero values to avoid undefined grad at zero
+    arr = np.abs(np.random.randn(3, 4)).astype(np.float64) + 0.1
+    for axis in [0, 1]:
+        x = npg.array(arr, requires_grad=True)
+        y = x.cumprod(axis=axis)
+        y.sum().backward()
+
+        xt = torch.from_numpy(arr).requires_grad_(True)
+        yt = xt.cumprod(dim=axis)
+        yt.sum().backward()
+        assert x.grad is not None
+        check_equality(x.grad, xt.grad.numpy())
+
+
+def test_cumprod_backward_flat():
+    arr = np.abs(np.random.randn(3, 4)).astype(np.float64) + 0.1
+    x = npg.array(arr, requires_grad=True)
+    y = x.cumprod()
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.flatten().cumprod(dim=0)
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy().reshape(arr.shape))
+
+
+def test_cumprod_functional():
+    arr = np.abs(np.random.randn(4)).astype(np.float64) + 0.1
+    x = npg.array(arr)
+    check_equality(npg.cumprod(x).data, np.cumprod(arr))

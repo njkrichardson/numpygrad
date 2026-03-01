@@ -31,6 +31,11 @@ class Context:
         self.stride: tuple[int, int] = (1, 1)
         self.padding: tuple[int, int] = (0, 0)
         self.input_shape: tuple[int, ...] = ()
+        self.ddof: int = 0
+        self.offset: int = 0
+        self.repeats: int = 1
+        self.axis1: int = 0
+        self.axis2: int = 1
 
     def store(self, *arrays) -> None:
         self._saved_arrays = arrays

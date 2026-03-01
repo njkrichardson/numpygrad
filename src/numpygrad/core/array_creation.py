@@ -13,6 +13,10 @@ def zeros(shape: tuple[int, ...] | int, **kwargs) -> npg.ndarray:
     return npg.array(np.zeros(shape), **kwargs)
 
 
+def empty(shape: tuple[int, ...] | int, **kwargs) -> npg.ndarray:
+    return npg.array(np.empty(shape), **kwargs)
+
+
 def zeros_like(x: npg.ndarray | np.ndarray, **kwargs) -> npg.ndarray:
     return npg.array(np.zeros_like(x.data if isinstance(x, npg.array) else x), **kwargs)
 

@@ -228,3 +228,91 @@ def test_cat_backward(data):
     for x, gxt in zip(xs, gxts, strict=False):
         assert x.grad is not None
         check_equality(x.grad, gxt.numpy())
+
+
+# --- squeeze ---
+
+
+def test_squeeze_basic():
+    arr = np.random.randn(1, 3, 1, 4).astype(np.float64)
+    x = npg.array(arr)
+    z = x.squeeze()
+    check_equality(z.data, np.squeeze(arr))
+    assert z.shape == (3, 4)
+
+
+def test_squeeze_axis():
+    arr = np.random.randn(1, 3, 1, 4).astype(np.float64)
+    x = npg.array(arr)
+    z = x.squeeze(axis=0)
+    check_equality(z.data, np.squeeze(arr, axis=0))
+    assert z.shape == (3, 1, 4)
+
+
+def test_squeeze_backward():
+    arr = np.random.randn(1, 3, 1, 4).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    y = x.squeeze()
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.squeeze()
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy())
+
+
+def test_squeeze_functional():
+    arr = np.random.randn(1, 3).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.squeeze(x).data, np.squeeze(arr))
+
+
+# --- repeat ---
+
+
+def test_repeat_basic():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    z = x.repeat(2, axis=0)
+    check_equality(z.data, np.repeat(arr, 2, axis=0))
+
+
+def test_repeat_flat():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    z = x.repeat(3)
+    check_equality(z.data, np.repeat(arr, 3))
+
+
+def test_repeat_backward_axis():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    for axis in [0, 1]:
+        x = npg.array(arr, requires_grad=True)
+        y = x.repeat(3, axis=axis)
+        y.sum().backward()
+
+        xt = torch.from_numpy(arr).requires_grad_(True)
+        yt = xt.repeat_interleave(3, dim=axis)
+        yt.sum().backward()
+        assert x.grad is not None
+        check_equality(x.grad, xt.grad.numpy())
+
+
+def test_repeat_backward_flat():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    y = x.repeat(2)
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.flatten().repeat_interleave(2)
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy().reshape(arr.shape))
+
+
+def test_repeat_functional():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.repeat(x, 2, axis=1).data, np.repeat(arr, 2, axis=1))

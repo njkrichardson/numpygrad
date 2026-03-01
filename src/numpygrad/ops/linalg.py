@@ -2,7 +2,7 @@ import numpy as np
 
 from numpygrad.core.array import Array, ArrayCoercible
 from numpygrad.core.broadcasting import reduce_grad_to_shape
-from numpygrad.core.function import Function
+from numpygrad.core.function import Context, Function
 from numpygrad.core.opid import OperatorId
 from numpygrad.core.registry import OperatorRequirements, register
 from numpygrad.ops.core import ensure_array
@@ -159,3 +159,74 @@ class Norm(Function):
 @register(OperatorId.NORM, op_requirements=OperatorRequirements.Autograd)
 def norm_autograd(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
     return Norm.apply(a, axis, keepdims)
+
+
+@register(OperatorId.DIAGONAL)
+def diagonal_cpu(a: ArrayCoercible, offset: int = 0, axis1: int = 0, axis2: int = 1) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.diagonal(a.data, offset=offset, axis1=axis1, axis2=axis2),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Diagonal(Function):
+    @staticmethod
+    def forward(
+        ctx: Context, a: ArrayCoercible, offset: int = 0, axis1: int = 0, axis2: int = 1
+    ) -> Array:
+        a = ensure_array(a)
+        ctx.input_shape = a.shape
+        ctx.offset = offset
+        ctx.axis1 = axis1
+        ctx.axis2 = axis2
+        # np.diagonal returns a read-only view; copy to make it writable
+        out = np.diagonal(a.data, offset=offset, axis1=axis1, axis2=axis2).copy()
+        return Array(out, device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        input_shape = ctx.input_shape
+        offset = ctx.offset
+        axis1 = ctx.axis1
+        axis2 = ctx.axis2
+
+        # Move the two axes of interest to positions 0 and 1
+        other_axes = [i for i in range(len(input_shape)) if i != axis1 and i != axis2]
+        perm = [axis1, axis2] + other_axes
+        inv_perm = [0] * len(perm)
+        for i, p in enumerate(perm):
+            inv_perm[p] = i
+
+        permuted_shape = tuple(input_shape[i] for i in perm)
+        grad_permuted = np.zeros(permuted_shape, dtype=grad.dtype)
+
+        diag_len = grad.shape[-1] if grad.ndim > 1 else grad.shape[0]
+        # For N-D arrays, grad has shape (...batch..., diag_len); move diag_len to end
+        # grad after np.diagonal has shape (*batch_dims, diag_len) where batch_dims
+        # are the non-axis1/axis2 dims in original order — match with other_axes order.
+        if offset >= 0:
+            rows = np.arange(diag_len)
+            cols = np.arange(offset, offset + diag_len)
+        else:
+            rows = np.arange(-offset, -offset + diag_len)
+            cols = np.arange(diag_len)
+
+        # grad has shape (*other_axes_sizes, diag_len); index into permuted grad
+        if len(other_axes) == 0:
+            grad_permuted[rows, cols] = grad
+        else:
+            # grad shape: (*other_dims, diag_len); we need to scatter into [rows, cols, ...]
+            # Use advanced indexing: grad_permuted[rows, cols, ...] += grad[..., :]
+            # Transpose grad to (diag_len, *other_dims) for broadcasting
+            grad_t = np.moveaxis(grad, -1, 0)  # (diag_len, *other_dims)
+            grad_permuted[rows, cols] = grad_t
+
+        grad_out = np.transpose(grad_permuted, inv_perm)
+        return grad_out, None, None, None
+
+
+@register(OperatorId.DIAGONAL, op_requirements=OperatorRequirements.Autograd)
+def diagonal_autograd(a: ArrayCoercible, offset: int = 0, axis1: int = 0, axis2: int = 1) -> Array:
+    return Diagonal.apply(a, offset, axis1, axis2)

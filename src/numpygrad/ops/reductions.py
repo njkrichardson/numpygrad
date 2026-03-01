@@ -261,3 +261,139 @@ def argmax_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = Fals
         device="cpu_np",
         requires_grad=False,
     )
+
+
+@register(OperatorId.VAR)
+def var_cpu(
+    a: ArrayCoercible, axis: int | None = None, ddof: int = 0, keepdims: bool = False
+) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.var(a.data, axis=axis, ddof=ddof, keepdims=keepdims),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Var(Function):
+    @staticmethod
+    def forward(
+        ctx: Context, a: ArrayCoercible, axis=None, ddof: int = 0, keepdims: bool = False
+    ) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        ctx.axis = axis
+        ctx.ddof = ddof
+        ctx.keepdims = keepdims
+        return Array(
+            np.var(a.data, axis=axis, ddof=ddof, keepdims=keepdims),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (a,) = ctx.saved_arrays
+        axis = ctx.axis
+        ddof = ctx.ddof
+        keepdims = ctx.keepdims
+
+        if axis is None:
+            n = a.data.size
+        else:
+            axis_tuple = axis if isinstance(axis, tuple) else (axis,)
+            n = int(np.prod([a.shape[i] for i in axis_tuple]))
+
+        mean_x = np.mean(a.data, axis=axis, keepdims=True)
+        upstream = grad if keepdims or axis is None else np.expand_dims(grad, axis=axis)
+        grad_a = upstream * 2.0 * (a.data - mean_x) / (n - ddof)
+        return grad_a, None, None, None
+
+
+@register(OperatorId.VAR, op_requirements=OperatorRequirements.Autograd)
+def var_autograd(a: ArrayCoercible, axis=None, ddof: int = 0, keepdims: bool = False) -> Array:
+    return Var.apply(a, axis, ddof, keepdims)
+
+
+@register(OperatorId.CUMSUM)
+def cumsum_cpu(a: ArrayCoercible, axis=None) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.cumsum(a.data, axis=axis),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class CumSum(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, axis=None) -> Array:
+        a = ensure_array(a)
+        ctx.input_shape = a.shape
+        ctx.axis = axis
+        return Array(
+            np.cumsum(a.data, axis=axis),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        axis = ctx.axis
+        if axis is None:
+            flat_grad = np.flip(np.cumsum(np.flip(grad)))
+            return flat_grad.reshape(ctx.input_shape), None
+        else:
+            return np.flip(np.cumsum(np.flip(grad, axis=axis), axis=axis), axis=axis), None
+
+
+@register(OperatorId.CUMSUM, op_requirements=OperatorRequirements.Autograd)
+def cumsum_autograd(a: ArrayCoercible, axis=None) -> Array:
+    return CumSum.apply(a, axis)
+
+
+@register(OperatorId.CUMPROD)
+def cumprod_cpu(a: ArrayCoercible, axis=None) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.cumprod(a.data, axis=axis),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class CumProd(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, axis=None) -> Array:
+        a = ensure_array(a)
+        out = np.cumprod(a.data, axis=axis)
+        ctx.store(a, out)
+        ctx.input_shape = a.shape
+        ctx.axis = axis
+        return Array(out, device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        a, out = ctx.saved_arrays
+        out_data = out.data if hasattr(out, "data") else out
+        axis = ctx.axis
+
+        # reverse cumsum of (grad * y), then divide by x
+        # grad_x[i] = sum_{j>=i} grad[j] * prod_{k in [i+1..j]} x[k]
+        #           = (1/x[i]) * reverse_cumsum(grad * y)[i]
+        product = grad * out_data
+        if axis is None:
+            rev_cs = np.flip(np.cumsum(np.flip(product)))
+            rev_cs = rev_cs.reshape(ctx.input_shape)
+            a_data = a.data
+        else:
+            rev_cs = np.flip(np.cumsum(np.flip(product, axis=axis), axis=axis), axis=axis)
+            a_data = a.data
+
+        grad_a = rev_cs / a_data
+        return grad_a, None
+
+
+@register(OperatorId.CUMPROD, op_requirements=OperatorRequirements.Autograd)
+def cumprod_autograd(a: ArrayCoercible, axis=None) -> Array:
+    return CumProd.apply(a, axis)

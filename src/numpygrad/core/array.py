@@ -78,6 +78,14 @@ class Array:
     def size(self) -> int:
         return self.data.size
 
+    @property
+    def itemsize(self) -> int:
+        return self.data.itemsize
+
+    @property
+    def strides(self) -> tuple[int, ...]:
+        return self.data.strides
+
     def item(self) -> float:
         return self.data.item()
 
@@ -189,6 +197,67 @@ class Array:
 
     def argmax(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.ARGMAX, self, axis=axis, keepdims=keepdims)
+
+    # --- simple wrappers (no autograd) ---
+
+    def tolist(self) -> list:
+        return self.data.tolist()
+
+    def nonzero(self) -> tuple["Array", ...]:
+        return tuple(Array(idx) for idx in np.nonzero(self.data))
+
+    def astype(self, dtype) -> "Array":
+        new_data = self.data.astype(dtype)
+        is_float = np.issubdtype(new_data.dtype, np.floating)
+        return Array(new_data, device=self.device, requires_grad=self.requires_grad and is_float)
+
+    def all(self, axis=None, keepdims: bool = False) -> "Array":
+        return Array(np.all(self.data, axis=axis, keepdims=keepdims))
+
+    def any(self, axis=None, keepdims: bool = False) -> "Array":
+        return Array(np.any(self.data, axis=axis, keepdims=keepdims))
+
+    def fill(self, value) -> None:
+        self.data.fill(value)
+        self._version_counter.increment()
+
+    def sort(self, axis: int = -1) -> None:
+        self.data.sort(axis=axis)
+        self._version_counter.increment()
+
+    def round(self, decimals: int = 0) -> "Array":
+        return Array(np.round(self.data, decimals=decimals), device=self.device)
+
+    # --- compositions of existing differentiable ops ---
+
+    def std(self, axis=None, ddof: int = 0, keepdims: bool = False) -> "Array":
+        return self.var(axis=axis, ddof=ddof, keepdims=keepdims) ** 0.5
+
+    def trace(self, offset: int = 0) -> "Array":
+        return self.diagonal(offset=offset).sum()
+
+    # --- new differentiable ops ---
+
+    def squeeze(self, axis=None) -> "Array":
+        return dispatch(OperatorId.SQUEEZE, self, axis=axis)
+
+    def repeat(self, repeats: int, axis=None) -> "Array":
+        return dispatch(OperatorId.REPEAT, self, repeats=repeats, axis=axis)
+
+    def diagonal(self, offset: int = 0, axis1: int = 0, axis2: int = 1) -> "Array":
+        return dispatch(OperatorId.DIAGONAL, self, offset=offset, axis1=axis1, axis2=axis2)
+
+    def cumsum(self, axis=None) -> "Array":
+        return dispatch(OperatorId.CUMSUM, self, axis=axis)
+
+    def cumprod(self, axis=None) -> "Array":
+        return dispatch(OperatorId.CUMPROD, self, axis=axis)
+
+    def var(self, axis=None, ddof: int = 0, keepdims: bool = False) -> "Array":
+        return dispatch(OperatorId.VAR, self, axis=axis, ddof=ddof, keepdims=keepdims)
+
+    def sqrt(self) -> "Array":
+        return self**0.5
 
     @property
     def T(self) -> "Array":

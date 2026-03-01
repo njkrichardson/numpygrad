@@ -21,11 +21,15 @@ class OperatorId(enum.StrEnum):
     MIN = enum.auto()
     PRODUCT = enum.auto()
     ARGMAX = enum.auto()
+    VAR = enum.auto()
+    CUMSUM = enum.auto()
+    CUMPROD = enum.auto()
 
     # linear algebra
     MATMUL = enum.auto()
     DOT = enum.auto()
     NORM = enum.auto()
+    DIAGONAL = enum.auto()
 
     # activations
     SOFTMAX = enum.auto()
@@ -43,6 +47,8 @@ class OperatorId(enum.StrEnum):
     EXPAND = enum.auto()
     STACK = enum.auto()
     CAT = enum.auto()
+    SQUEEZE = enum.auto()
+    REPEAT = enum.auto()
 
     # convolution
     CONV2D = enum.auto()

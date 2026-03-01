@@ -290,3 +290,77 @@ class Cat(Function):
 @register(OperatorId.CAT, op_requirements=OperatorRequirements.Autograd)
 def cat_autograd(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
     return Cat.apply(*arrays, axis)
+
+
+@register(OperatorId.SQUEEZE)
+def squeeze_cpu(a: ArrayCoercible, axis=None) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.squeeze(a.data, axis=axis),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Squeeze(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, axis=None) -> Array:
+        a = ensure_array(a)
+        ctx.input_shape = a.shape
+        return Array(
+            np.squeeze(a.data, axis=axis),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        return np.reshape(grad, ctx.input_shape), None
+
+
+@register(OperatorId.SQUEEZE, op_requirements=OperatorRequirements.Autograd)
+def squeeze_autograd(a: ArrayCoercible, axis=None) -> Array:
+    return Squeeze.apply(a, axis)
+
+
+@register(OperatorId.REPEAT)
+def repeat_cpu(a: ArrayCoercible, repeats: int, axis=None) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.repeat(a.data, repeats, axis=axis),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
+class Repeat(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible, repeats: int, axis=None) -> Array:
+        a = ensure_array(a)
+        ctx.input_shape = a.shape
+        ctx.repeats = repeats
+        ctx.axis = axis
+        return Array(
+            np.repeat(a.data, repeats, axis=axis),
+            device=a.device,
+            requires_grad=a.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        repeats = ctx.repeats
+        axis = ctx.axis
+        input_shape = ctx.input_shape
+        if axis is None:
+            # flat repeat: grad is 1D of size input.size * repeats
+            grad_flat = grad.reshape(-1, repeats).sum(axis=1)
+            return grad_flat.reshape(input_shape), None, None
+        else:
+            n = input_shape[axis]
+            indices = np.arange(0, n * repeats, repeats)
+            return np.add.reduceat(grad, indices, axis=axis), None, None
+
+
+@register(OperatorId.REPEAT, op_requirements=OperatorRequirements.Autograd)
+def repeat_autograd(a: ArrayCoercible, repeats: int, axis=None) -> Array:
+    return Repeat.apply(a, repeats, axis)

@@ -279,3 +279,87 @@ def test_norm_backward(data):
     )[0]
     assert x.grad is not None
     check_equality(x.grad, gxt.numpy())
+
+
+# --- diagonal ---
+
+
+def test_diagonal_basic():
+    arr = np.random.randn(4, 5).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(x.diagonal().data, np.diagonal(arr))
+
+
+def test_diagonal_offset_positive():
+    arr = np.random.randn(4, 5).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(x.diagonal(offset=1).data, np.diagonal(arr, offset=1))
+
+
+def test_diagonal_offset_negative():
+    arr = np.random.randn(4, 5).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(x.diagonal(offset=-1).data, np.diagonal(arr, offset=-1))
+
+
+def test_diagonal_backward():
+    arr = np.random.randn(4, 5).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    y = x.diagonal()
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.diagonal()
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy())
+
+
+def test_diagonal_backward_offset():
+    arr = np.random.randn(4, 5).astype(np.float64)
+    for offset in [-2, -1, 0, 1, 2]:
+        x = npg.array(arr, requires_grad=True)
+        y = x.diagonal(offset=offset)
+        y.sum().backward()
+
+        xt = torch.from_numpy(arr).requires_grad_(True)
+        yt = xt.diagonal(offset=offset)
+        yt.sum().backward()
+        assert x.grad is not None
+        check_equality(x.grad, xt.grad.numpy())
+
+
+def test_diagonal_3d():
+    arr = np.random.randn(3, 4, 5).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    y = x.diagonal(axis1=1, axis2=2)
+    y.sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    yt = xt.diagonal(dim1=1, dim2=2)
+    yt.sum().backward()
+    assert x.grad is not None
+    check_equality(x.grad, xt.grad.numpy())
+
+
+def test_diagonal_functional():
+    arr = np.random.randn(3, 4).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.diagonal(x).data, np.diagonal(arr))
+
+
+def test_trace_method():
+    arr = np.random.randn(4, 4).astype(np.float64)
+    x = npg.array(arr, requires_grad=True)
+    z = x.trace()
+    z.backward()
+
+    check_equality(z.data, np.trace(arr))
+    # gradient of trace is identity matrix
+    check_equality(x.grad, np.eye(4))
+
+
+def test_trace_functional():
+    arr = np.random.randn(3, 3).astype(np.float64)
+    x = npg.array(arr)
+    check_equality(npg.trace(x).data, np.trace(arr))
