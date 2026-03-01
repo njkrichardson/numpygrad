@@ -90,11 +90,19 @@ pip install -e ".[examples]"   # adds matplotlib
 python -m examples.regression_1d.main # use --help for cli arg descriptions
 ```
 
+<p align="center">
+  <img src="examples/regression_1d/media/regression_1d_fit.png" width="600"/>
+</p>
+
 ### 2d Classification 
 
 ```bash
 python -m examples.classification_2d.main # use --help for cli arg descriptions
 ```
+
+<p align="center">
+  <img src="examples/classification_2d/media/classification_2d.png" width="750"/>
+</p>
 
 ## Project layout
 

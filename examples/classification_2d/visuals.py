@@ -95,68 +95,35 @@ def plot_decision(ax, X, predict_proba, gridsize=75, border=0.15):
     ax.set_ylim(ylims)
 
 
-def plot_initial_decision(X_train, predict_proba):
+def start_aggregate(X_train, y_train, predict_proba, partial=False):
     if not HAS_MATPLOTLIB:
-        return
+        return None
     MEDIA_DIR.mkdir(exist_ok=True)
-    save_path = MEDIA_DIR / "classification_2d_initial.png"
-    _, ax = plt.subplots(figsize=(5, 5))
-    plot_decision(ax, X_train, predict_proba)
-    plt.tight_layout()
-    plt.xticks([])
-    plt.yticks([])
-    plt.savefig(save_path)
-    plt.close()
-    Log.info(f"Plot saved to {str(save_path)}")
+    n = 2 if partial else 3
+    fig, axes = plt.subplots(1, n, figsize=(n * 5, 5))
+    for ax in axes:
+        ax.set_xticks([])
+        ax.set_yticks([])
+    cmap = ListedColormap(COLORS)
+    X_np = X_train.numpy() if hasattr(X_train, "numpy") else onp.asarray(X_train)
+    axes[0].scatter(X_np[:, 0], X_np[:, 1], c=y_train, cmap=cmap, marker="o", s=5)
+    plot_decision(axes[1], X_train, predict_proba)
+    plt.subplots_adjust(wspace=0.04)
+    if partial:
+        save_path = MEDIA_DIR / "classification_2d.png"
+        plt.savefig(save_path, bbox_inches="tight")
+        plt.close(fig)
+        Log.info(f"Plot saved to {str(save_path)}")
+        return None
+    return fig
 
 
-def plot_dataset_scatter(dataset, X_train, y_train):
-    if not HAS_MATPLOTLIB:
+def finish_aggregate(fig, X_train, predict_proba):
+    if fig is None:
         return
-    MEDIA_DIR.mkdir(exist_ok=True)
-    # Dark palette (RGB 0-255 → 0-1)
-    colors = [
-        [106 / 255, 61 / 255, 154 / 255],
-        [31 / 255, 120 / 255, 180 / 255],
-        [51 / 255, 160 / 255, 44 / 255],
-        [227 / 255, 26 / 255, 28 / 255],
-        [255 / 255, 127 / 255, 0 / 255],
-    ]
-    cmap = ListedColormap(colors)
-
-    num_samples: int = min(len(dataset.data.numpy()), 2048)
-    indices = onp.random.choice(len(dataset.data.numpy()), num_samples, replace=False)
-    data = dataset.data[indices]
-    targets = dataset.targets[indices]
-
-    plt.figure(figsize=(5, 5))
-    plt.scatter(
-        data[:, 0].numpy(),
-        data[:, 1].numpy(),
-        c=targets.numpy(),
-        cmap=cmap,
-        marker="o",
-        s=5,
-    )
+    plot_decision(fig.axes[2], X_train, predict_proba)
     plt.tight_layout()
-    plt.xticks([])
-    plt.yticks([])
     save_path = MEDIA_DIR / "classification_2d.png"
-    plt.savefig(save_path)
-    plt.close()
+    plt.savefig(save_path, bbox_inches="tight")
+    plt.close(fig)
     Log.info(f"Plot saved to {str(save_path)}")
-
-
-def plot_final_decision(X_train, predict_proba):
-    if not HAS_MATPLOTLIB:
-        return
-    MEDIA_DIR.mkdir(exist_ok=True)
-    save_path_final = MEDIA_DIR / "classification_2d_final.png"
-    _, ax = plt.subplots(figsize=(5, 5))
-    plot_decision(ax, X_train, predict_proba)
-    plt.tight_layout()
-    plt.xticks([])
-    plt.yticks([])
-    plt.savefig(save_path_final)
-    plt.close()
-    Log.info(f"Final classifier plot saved to {str(save_path_final)}")

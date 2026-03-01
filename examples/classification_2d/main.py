@@ -5,11 +5,7 @@ import numpy as onp
 import numpygrad as np
 import numpygrad.nn as nn
 from examples.classification_2d.data import PinwheelDataset
-from examples.classification_2d.visuals import (
-    plot_dataset_scatter,
-    plot_final_decision,
-    plot_initial_decision,
-)
+from examples.classification_2d.visuals import finish_aggregate, start_aggregate
 from numpygrad.utils.data import DataLoader, TensorDataset
 
 np.manual_seed(0)
@@ -117,8 +113,9 @@ def main(args: argparse.Namespace):
 
     X_train = train_dataset.data
 
-    plot_initial_decision(X_train, predict_proba)
-    plot_dataset_scatter(train_dataset, X_train, train_dataset.targets)
+    _fig = start_aggregate(
+        X_train, train_dataset.targets.data, predict_proba, partial=args.initial_plot_only
+    )
     if args.initial_plot_only:
         return
 
@@ -147,7 +144,7 @@ def main(args: argparse.Namespace):
         f"{estimate_accuracy(args.num_estimate_loss_batches, test_dataloader) * 100:0.2f}%"
     )
 
-    plot_final_decision(X_train, predict_proba)
+    finish_aggregate(_fig, X_train, predict_proba)
 
 
 if __name__ == "__main__":
