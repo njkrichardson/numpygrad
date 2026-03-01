@@ -1,5 +1,5 @@
 from numpygrad.core.array import Array
-from numpygrad.nn.activations import ReLU
+from numpygrad.nn.activations import ReLU, Sigmoid, Tanh
 from numpygrad.nn.linear import Linear
 from numpygrad.nn.module import Module, Sequential
 
@@ -17,6 +17,10 @@ class MLP(Module):
 
         if activation == "relu":
             act = ReLU()
+        elif activation == "tanh":
+            act = Tanh()
+        elif activation == "sigmoid":
+            act = Sigmoid()
         else:
             raise ValueError(f"Activation {activation} not supported")
 
@@ -33,6 +37,3 @@ class MLP(Module):
 
     def forward(self, x: Array) -> Array:
         return self.layers(x)
-        # for layer in self.layers[:-1]:
-        #     x = relu(layer(x))
-        # return self.layers[-1](x)

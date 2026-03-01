@@ -1,29 +1,27 @@
 import argparse
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
 import numpygrad as np
 import numpygrad.nn as nn
 from examples.regression_1d.data import RegressionDataset
+from examples.regression_1d.visuals import plot_fit
 from numpygrad.utils.data import DataLoader
 
 np.manual_seed(0)
 Log = np.Log(__name__)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--create-plot", action="store_true")
-parser.add_argument("--num-steps", type=int, default=10_000)
+parser.add_argument("--num-steps", type=int, default=2_000)
 parser.add_argument("--report-every", type=int, default=100)
-parser.add_argument("--batch-size", type=int, default=128)
-parser.add_argument("--hidden-sizes", type=int, nargs="+", default=[8] * 8)
+parser.add_argument("--batch-size", type=int, default=512)
+parser.add_argument("--hidden-sizes", type=int, nargs="+", default=[32] * 2)
 parser.add_argument("--input-dim", type=int, default=1)
 parser.add_argument("--output-dim", type=int, default=1)
-parser.add_argument("--snr-db", type=float, default=10)
+parser.add_argument("--snr-db", type=float, default=12)
 parser.add_argument("--num-examples", type=int, default=2_048)
 parser.add_argument("--num-estimate-loss-batches", type=int, default=32)
+parser.add_argument("--optimizer", type=str, choices=["sgd", "adamw"], default="adamw")
+parser.add_argument("--plot-init-only", action="store_true")
+parser.add_argument("--activation", type=str, choices=["relu", "tanh", "sigmoid"], default="tanh")
 
 
 def main(args: argparse.Namespace):
@@ -31,8 +29,13 @@ def main(args: argparse.Namespace):
     input_dim = args.input_dim
     output_dim = args.output_dim
 
-    net = nn.MLP(input_dim, hidden_sizes, output_dim)
-    optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
+    net = nn.MLP(input_dim, hidden_sizes, output_dim, activation=args.activation)
+    if args.optimizer == "sgd":
+        optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
+    elif args.optimizer == "adamw":
+        optimizer = np.optim.AdamW(net.parameters())
+    else:
+        raise ValueError(f"Invalid optimizer: {args.optimizer}")
 
     dataset = RegressionDataset(args.num_examples, args.snr_db)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
@@ -48,6 +51,10 @@ def main(args: argparse.Namespace):
         optimizer.zero_grad()
         return np.mean(np.array(losses)).item()
 
+    if args.plot_init_only:
+        plot_fit(dataset, net, name="regression_1d_init")
+        return
+
     for step in range(args.num_steps):
         x, y = next(iter(dataloader))
         optimizer.zero_grad()
@@ -62,20 +69,7 @@ def main(args: argparse.Namespace):
 
     Log.info(f"Final loss: {estimate_loss(args.num_estimate_loss_batches):.4f}")
 
-    if args.create_plot:
-        save_path = np.configuration.MEDIA_DIR / "mlp_fit_numpygrad.png"
-        plt.figure(figsize=(18, 10))
-        plt.scatter(dataset.inputs_unnormalized, dataset.targets.data, c="tab:blue", alpha=0.5)
-        plt.plot(
-            dataset.inputs_unnormalized,
-            net(dataset.data).data,
-            c="tab:orange",
-            linewidth=3,
-        )
-        plt.tight_layout()
-        plt.savefig(save_path)
-        plt.close()
-        Log.info(f"Plot saved to {save_path}")
+    plot_fit(dataset, net)
 
 
 if __name__ == "__main__":
