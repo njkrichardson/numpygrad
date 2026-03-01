@@ -17,17 +17,17 @@ repos:
         additional_dependencies: []
   - repo: local
     hooks:
-      - id: run-tests
-        name: Run full pytest suite on push to main
-        entry: scripts/run-tests-on-main
+      - id: check-mypy
+        name: Run mypy on push to main
+        entry: scripts/run-mypy-on-main
         language: script
         pass_filenames: false
         stages: [pre-push]
   - repo: local
     hooks:
-      - id: check-mypy
-        name: Run mypy on push to main
-        entry: scripts/run-mypy-on-main
+      - id: run-tests
+        name: Run full pytest suite on push to main
+        entry: scripts/run-tests-on-main
         language: script
         pass_filenames: false
         stages: [pre-push]
