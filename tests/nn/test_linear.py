@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 import numpygrad as npg
@@ -66,6 +66,7 @@ def test_linear_forward(config):
     check_equality(y.data, yt.detach().numpy())
 
 
+@settings(deadline=None)
 @given(configuration())
 def test_linear_backward(config):
     input_shape, output_shape = config

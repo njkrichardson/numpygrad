@@ -13,6 +13,14 @@ from numpygrad.core.contexts import no_grad
 # ---------------------------------------------------------------------------
 
 
+def test_array_numpy():
+    data = np.array([1.0, 2.0, 3.0])
+    x = Array(data)
+    result = x.numpy()
+    assert isinstance(result, np.ndarray)
+    np.testing.assert_array_equal(result, data)
+
+
 def test_array_from_list():
     x = Array([1.0, 2.0, 3.0])
     assert x.shape == (3,)

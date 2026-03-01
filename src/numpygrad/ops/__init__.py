@@ -20,6 +20,18 @@ def log_softmax(a: ArrayCoercible, axis: int = -1) -> Array:
     return dispatch(OperatorId.LOG_SOFTMAX, a, axis=axis)
 
 
+def sigmoid(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.SIGMOID, a)
+
+
+def tanh(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.TANH, a)
+
+
+def softplus(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.SOFTPLUS, a)
+
+
 # elementwise
 
 
@@ -146,6 +158,9 @@ __all__ = [
     "activations",
     "softmax",
     "log_softmax",
+    "sigmoid",
+    "tanh",
+    "softplus",
     # special methods
     "special",
     "setitem",

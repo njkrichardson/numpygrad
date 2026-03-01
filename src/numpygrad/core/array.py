@@ -5,7 +5,8 @@ from numpygrad.core.dispatch import dispatch
 from numpygrad.core.opid import OperatorId
 
 type ArrayCoercible = "np.ndarray | int | float | \
-list[int | float] | tuple[int | float] | Array | tuple[int, ...]"
+list[int | float] | tuple[int | float] | Array | tuple[int, ...] | \
+list[list[int | float]] | list[tuple[int | float]]"
 
 
 class Array:
@@ -44,6 +45,9 @@ class Array:
         self.ctx = None
         self.parents = ()
         self.label = label
+
+    def numpy(self) -> np.ndarray:
+        return self.data
 
     @property
     def shape(self) -> tuple[int, ...]:

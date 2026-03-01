@@ -11,6 +11,7 @@ def dispatch(op_id: OperatorId, *args, **kwargs):
         arrays_arg = kwargs["arrays"]
         assert isinstance(arrays_arg, (list, tuple))
         arrays = [x for x in arrays_arg if isinstance(x, Array)]
+
     device: DeviceId = arrays[0].device
     requires_grad = any(array.requires_grad for array in arrays)
     direction = OperatorRequirements.Autograd if requires_grad else OperatorRequirements.ForwardOnly

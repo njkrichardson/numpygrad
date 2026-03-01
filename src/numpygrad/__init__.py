@@ -38,9 +38,12 @@ from numpygrad.ops import (
     relu,
     reshape,
     setitem,
+    sigmoid,
     softmax,
+    softplus,
     stack,
     sum,
+    tanh,
     transpose,
     unsqueeze,
 )
@@ -95,4 +98,7 @@ __all__ = [
     "setitem",
     "softmax",
     "log_softmax",
+    "sigmoid",
+    "tanh",
+    "softplus",
 ]

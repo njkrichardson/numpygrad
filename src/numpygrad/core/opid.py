@@ -30,6 +30,9 @@ class OperatorId(enum.StrEnum):
     # activations
     SOFTMAX = enum.auto()
     LOG_SOFTMAX = enum.auto()
+    SIGMOID = enum.auto()
+    TANH = enum.auto()
+    SOFTPLUS = enum.auto()
 
     # transforms
     TRANSPOSE = enum.auto()

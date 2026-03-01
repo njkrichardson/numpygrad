@@ -72,3 +72,84 @@ class LogSoftmax(Function):
 @register(OperatorId.LOG_SOFTMAX, op_requirements=OperatorRequirements.Autograd)
 def log_softmax_autograd(a: ArrayCoercible, axis: int = -1) -> Array:
     return LogSoftmax.apply(a, axis)
+
+
+@register(OperatorId.SIGMOID)
+def sigmoid_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    s = 1.0 / (1.0 + np.exp(-a.data))
+    return Array(s, device="cpu_np", requires_grad=False)
+
+
+class Sigmoid(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        s = 1.0 / (1.0 + np.exp(-a.data))
+        out = Array(s, device=a.device, requires_grad=a.requires_grad)
+        ctx.store(a, out)
+        return out
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        _, out = ctx.saved_arrays
+        s = out.data
+        return (grad * s * (1.0 - s),)
+
+
+@register(OperatorId.SIGMOID, op_requirements=OperatorRequirements.Autograd)
+def sigmoid_autograd(a: ArrayCoercible) -> Array:
+    return Sigmoid.apply(a)
+
+
+@register(OperatorId.TANH)
+def tanh_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    t = np.tanh(a.data)
+    return Array(t, device="cpu_np", requires_grad=False)
+
+
+class Tanh(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        t = np.tanh(a.data)
+        out = Array(t, device=a.device, requires_grad=a.requires_grad)
+        ctx.store(a, out)
+        return out
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        _, out = ctx.saved_arrays
+        t = out.data
+        return (grad * (1.0 - t**2),)
+
+
+@register(OperatorId.TANH, op_requirements=OperatorRequirements.Autograd)
+def tanh_autograd(a: ArrayCoercible) -> Array:
+    return Tanh.apply(a)
+
+
+@register(OperatorId.SOFTPLUS)
+def softplus_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.logaddexp(0, a.data), device="cpu_np", requires_grad=False)
+
+
+class SoftPlus(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        out = Array(np.logaddexp(0, a.data), device=a.device, requires_grad=a.requires_grad)
+        ctx.store(a)
+        return out
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        (a,) = ctx.saved_arrays
+        return (grad / (1.0 + np.exp(-a.data)),)
+
+
+@register(OperatorId.SOFTPLUS, op_requirements=OperatorRequirements.Autograd)
+def softplus_autograd(a: ArrayCoercible) -> Array:
+    return SoftPlus.apply(a)
