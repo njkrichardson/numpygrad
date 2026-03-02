@@ -19,6 +19,9 @@ tests = [
 examples = [
     "matplotlib>=3.10.8",
 ]
+docs = [
+    "sphinx>=9.1.0",
+]
 
 [dependency-groups]
 dev = [
@@ -49,8 +52,7 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 check_untyped_defs = false
 strict_optional = true
-exclude = "examples/|tests/|src/numpygrad/utils/visualizations\\.py$"
-# exclude = ["examples/", "src/numpygrad/utils/visualizations\\.py", "tests/"]
+exclude = "conf.py|examples/|tests/|src/numpygrad/utils/visualizations\\.py$"
 
 [[tool.mypy.overrides]]
 module = "graphviz"
