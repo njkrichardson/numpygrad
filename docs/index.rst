@@ -1,17 +1,43 @@
-.. numpygrad documentation master file, created by
-   sphinx-quickstart on Sun Mar  1 15:40:49 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+numpygrad
+=========
 
-numpygrad documentation
-=======================
+A NumPy-only autograd and neural network library with a PyTorch-like API.
+No C++ extensions, no CUDA — just readable, hackable Python.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+.. toctree::
+   :maxdepth: 1
+   :caption: Getting Started
 
+   getting_started
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Concepts
 
+   concepts/autograd
+   concepts/no_grad
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+
+   guide/training_loop
+   guide/custom_modules
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
+   api/array
+   api/ops
+   api/nn
+   api/optim
+   api/utils
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
+
+   examples/regression_1d
+   examples/classification_2d
+   examples/mnist
