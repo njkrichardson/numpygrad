@@ -4,10 +4,13 @@
 ![Ruff](https://img.shields.io/badge/lint-ruff-cc6600)
 ![Coverage](https://codecov.io/gh/njkrichardson/numpygrad/branch/main/graph/badge.svg)
 ![mypy](https://github.com/njkrichardson/numpygrad/actions/workflows/mypy.yml/badge.svg)
+[![Docs](https://readthedocs.org/projects/numpygrad/badge/?version=latest)](https://numpygrad.readthedocs.io/en/latest/)
 
 # NumpyGrad
 
 A small **autograd** and neural network library with a **PyTorch-like API**, built on **NumPy** only. No GPU, no C++ extensions—just Python and NumPy. Useful for learning how backprop and frameworks like PyTorch work, or for lightweight experiments where a full framework is overkill.
+
+**[Documentation](https://numpygrad.readthedocs.io/en/latest/)**
 
 ## Features
 
