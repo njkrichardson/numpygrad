@@ -24,10 +24,11 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 - **Familiar special methods** - `x @ y`, `mask = x > 0`, etc.
 
 ### Neural Nets
-- **Modules** - `Linear`, `Conv2d`, `MultiHeadAttention`, etc.
+- **Modules** - `Linear`, `Conv2d`, `Embedding`, `LayerNorm`, `MultiHeadAttention`, `Dropout`, `Sequential`, etc.
 - **Optimizers** - `AdamW`, `SGD`.
-- **Activations** - `ReLU`, `Tanh`, `Sigmoid`, `SoftPlus`. 
-- **Losses** - `CrossEntropy`, `mse`. 
+- **Activations** - `ReLU`, `GELU`, `Tanh`, `Sigmoid`, `SoftPlus`.
+- **Losses** - `CrossEntropy` (supports N-D logits), `MSE`.
+- **Parameter init** - `nn.init.kaiming_uniform_`, `xavier_normal_`, etc.
 
 ## Installation
 
@@ -72,12 +73,10 @@ optimizer.step()
 
 ## Examples
 
-The `examples/` directory includes demos that run with only the core install (NumPy +
-numpygrad). You can run them without installing the `[examples]` extra:
+The `examples/` directory includes self-contained demos. Run any of them with:
 
 ```bash
-python -m examples.regression_1d.main   # use --help for CLI options
-python -m examples.classification_2d.main
+python -m examples.<name>.main   # use --help for CLI options
 ```
 
 If **matplotlib** is not installed, training and evaluation run as usual but no figures
@@ -89,23 +88,44 @@ pip install -e ".[examples]"   # adds matplotlib
 
 ### Scalar Regression
 
+MLP fit to a noisy 1D function. Demonstrates MSE loss, AdamW, and train/test splits.
+
 ```bash
-python -m examples.regression_1d.main # use --help for cli arg descriptions
+python -m examples.regression_1d.main
 ```
 
 <p align="center">
   <img src="examples/regression_1d/media/regression_1d_fit.png" width="600"/>
 </p>
 
-### 2d Classification 
+### 2D Classification
+
+Classifier on a pinwheel (interleaved spirals) dataset. Demonstrates cross-entropy loss and decision-boundary visualisation.
 
 ```bash
-python -m examples.classification_2d.main # use --help for cli arg descriptions
+python -m examples.classification_2d.main
 ```
 
 <p align="center">
   <img src="examples/classification_2d/media/classification_2d.png" width="750"/>
 </p>
+
+### MNIST
+
+Conv-net classifier on handwritten digits. Data is downloaded automatically.
+
+```bash
+python -m examples.mnist.main
+```
+
+### GPT-2 Character Language Model
+
+A GPT-2-style transformer trained character-by-character on Shakespeare's complete works.
+Uses `LayerNorm`, `Embedding`, `Dropout`, `GELU`, causal masking via `triu` + `masked_fill`, and ND cross-entropy — all in pure NumPy.
+
+```bash
+python -m examples.gpt2.main   # ~45 min on CPU to generate proto-English
+```
 
 ## Project layout
 

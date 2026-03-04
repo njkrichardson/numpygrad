@@ -88,6 +88,8 @@ Activations
      - Hyperbolic tangent
    * - ``npg.softplus(a)``
      - :math:`\log(1 + e^x)` (smooth approximation of ReLU)
+   * - ``npg.gelu(a)``
+     - Gaussian Error Linear Unit (tanh approximation): :math:`0.5 x (1 + \tanh(\sqrt{2/\pi}(x + 0.044715 x^3)))`
    * - ``npg.relu(a)``
      - ``max(0, x)`` (also listed under element-wise)
 
@@ -132,6 +134,12 @@ Shape transforms
      - Remove size-1 dimensions (all if ``axis=None``)
    * - ``npg.repeat(a, repeats, axis=None)``
      - Repeat elements along an axis
+   * - ``npg.triu(a, k=0)``
+     - Upper-triangular part of a matrix (zeros below diagonal ``k``)
+   * - ``npg.split(a, split_size_or_sections, dim=0)``
+     - Split array into chunks. ``split_size_or_sections`` is an int (equal
+       chunks; last may be smaller) or a list of sizes. Returns a tuple of
+       ``Array`` objects.
    * - ``npg.stack(arrays, axis=0)``
      - Stack a list of arrays along a new axis
    * - ``npg.cat(arrays, axis=0)``
@@ -171,3 +179,21 @@ through the assignment::
     b = npg.setitem(a, 2, npg.array([5.0]))
     b.sum().backward()
     print(a.grad)   # [1., 1., 1., 1.]
+
+``npg.masked_fill(a, mask, value)``
+
+Fill positions where boolean ``mask`` is ``True`` with scalar ``value``.
+Broadcasts ``mask`` over ``a`` when ranks differ (e.g. a 2D causal mask
+applied to a 4D attention score tensor)::
+
+    mask = npg.triu(npg.ones((T, T)), k=1).view(1, 1, T, T)
+    scores = scores.masked_fill(mask, float("-inf"))
+
+Embedding lookup (``npg.ops.embedding``)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Row-wise lookup into a weight matrix; used internally by ``nn.Embedding``::
+
+    weight = npg.randn((vocab_size, embed_dim), requires_grad=True)
+    indices = npg.array([0, 3, 1])
+    out = npg.ops.embedding(weight, indices)   # (3, embed_dim)
