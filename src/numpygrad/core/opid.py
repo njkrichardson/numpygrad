@@ -53,6 +53,9 @@ class OperatorId(enum.StrEnum):
     # convolution
     CONV2D = enum.auto()
 
+    # embedding
+    EMBEDDING = enum.auto()
+
     # special methods
     GT = enum.auto()
     LT = enum.auto()

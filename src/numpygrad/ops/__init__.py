@@ -153,6 +153,10 @@ def repeat(a: ArrayCoercible, repeats: int, axis=None) -> Array:
     return dispatch(OperatorId.REPEAT, a, repeats=repeats, axis=axis)
 
 
+def embedding(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.EMBEDDING, weight, indices)
+
+
 def stack(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
     return dispatch(OperatorId.STACK, arrays=arrays, axis=axis)
 
@@ -243,6 +247,7 @@ __all__ = [
     "flatten",
     "squeeze",
     "repeat",
+    "embedding",
     "stack",
     "cat",
     "transforms",

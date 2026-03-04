@@ -365,3 +365,31 @@ class Repeat(Function):
 @register(OperatorId.REPEAT, op_requirements=OperatorRequirements.Autograd)
 def repeat_autograd(a: ArrayCoercible, repeats: int, axis=None) -> Array:
     return Repeat.apply(a, repeats, axis)
+
+
+@register(OperatorId.EMBEDDING)
+def embedding_cpu(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    weight = ensure_array(weight)
+    idx = ensure_array(indices).data.astype(int)
+    return Array(weight.data[idx], device="cpu_np", requires_grad=False)
+
+
+class EmbeddingLookup(Function):
+    @staticmethod
+    def forward(ctx: Context, weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+        weight = ensure_array(weight)
+        idx = ensure_array(indices).data.astype(int)
+        ctx.input_shape = weight.shape
+        ctx.key = idx
+        return Array(weight.data[idx], device=weight.device, requires_grad=weight.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        grad_weight = np.zeros(ctx.input_shape, dtype=grad.dtype)
+        np.add.at(grad_weight, ctx.key, grad)
+        return grad_weight, None
+
+
+@register(OperatorId.EMBEDDING, op_requirements=OperatorRequirements.Autograd)
+def embedding_autograd(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    return EmbeddingLookup.apply(weight, indices)
