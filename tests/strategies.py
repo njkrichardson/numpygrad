@@ -346,3 +346,23 @@ def unsqueeze_args(draw, dtypes=DTYPES):
     ndim = len(shape)
     axis = draw(st.integers(0, ndim))
     return arr, axis
+
+
+@st.composite
+def split_args(draw, dtypes=FLOAT_DTYPES):
+    """Strategy yielding (arr, split_size_or_sections, dim) for split."""
+    ndim = draw(st.integers(min_value=1, max_value=MAX_NUM_DIMS))
+    shape = tuple(draw(st.integers(min_value=2, max_value=MAX_DIM_SIZE)) for _ in range(ndim))
+    arr = draw(generic_array(shape=shape, dtypes=dtypes))
+    dim = draw(st.integers(0, ndim - 1))
+    n = shape[dim]
+    use_int = draw(st.booleans())
+    if use_int:
+        size = draw(st.integers(1, n))
+        return arr, size, dim
+    else:
+        num_sections = draw(st.integers(1, min(n, 4)))
+        base = n // num_sections
+        remainder = n % num_sections
+        sections = [base + (1 if i < remainder else 0) for i in range(num_sections)]
+        return arr, sections, dim

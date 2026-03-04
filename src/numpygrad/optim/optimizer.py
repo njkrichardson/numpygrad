@@ -1,10 +1,10 @@
 import numpy as np
 
-from numpygrad.core.array import Array
+from numpygrad.nn.module import Parameter
 
 
 class Optimizer:
-    def __init__(self, params: list[Array]):
+    def __init__(self, params: list[Parameter]):
         self.params = params
 
     def zero_grad(self) -> None:

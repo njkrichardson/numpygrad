@@ -37,6 +37,7 @@ class OperatorId(enum.StrEnum):
     SIGMOID = enum.auto()
     TANH = enum.auto()
     SOFTPLUS = enum.auto()
+    GELU = enum.auto()
 
     # transforms
     TRANSPOSE = enum.auto()
@@ -49,9 +50,13 @@ class OperatorId(enum.StrEnum):
     CAT = enum.auto()
     SQUEEZE = enum.auto()
     REPEAT = enum.auto()
+    TRIU = enum.auto()
 
     # convolution
     CONV2D = enum.auto()
+
+    # embedding
+    EMBEDDING = enum.auto()
 
     # special methods
     GT = enum.auto()
@@ -61,3 +66,4 @@ class OperatorId(enum.StrEnum):
     EQ = enum.auto()
     NE = enum.auto()
     SETITEM = enum.auto()
+    MASKED_FILL = enum.auto()

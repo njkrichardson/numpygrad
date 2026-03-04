@@ -1,9 +1,9 @@
-from numpygrad.core.array import Array
+from numpygrad.nn.module import Parameter
 from numpygrad.optim.optimizer import Optimizer
 
 
 class SGD(Optimizer):
-    def __init__(self, params: list[Array], step_size: float = 1e-3):
+    def __init__(self, params: list[Parameter], step_size: float = 1e-3):
         super().__init__(params)
         self.step_size = step_size
 

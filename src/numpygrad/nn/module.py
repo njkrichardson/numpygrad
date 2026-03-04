@@ -13,6 +13,7 @@ class Module:
         self._parameters: dict[str, Parameter] = {}
         self._modules: dict[str, Module] = {}
         self._buffers: dict[str, Array] = {}
+        object.__setattr__(self, "training", True)
 
     def __setattr__(self, name: str, value: Any) -> None:
         if isinstance(value, Parameter):
@@ -33,6 +34,15 @@ class Module:
             return self._buffers[name]
         else:
             raise AttributeError(f"Module has no attribute {name}")
+
+    def train(self, mode: bool = True) -> "Module":
+        object.__setattr__(self, "training", mode)
+        for module in self._modules.values():
+            module.train(mode)
+        return self
+
+    def eval(self) -> "Module":
+        return self.train(False)
 
     def add_module(self, name: str, module: "Module") -> None:
         self._modules[name] = module

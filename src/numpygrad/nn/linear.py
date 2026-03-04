@@ -2,6 +2,7 @@ import numpy as np
 
 from numpygrad.core.array import Array
 from numpygrad.core.array_creation import zeros
+from numpygrad.nn.init import xavier_normal_
 from numpygrad.nn.module import Module, Parameter
 
 
@@ -11,11 +12,7 @@ class Linear(Module):
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
         self.weight = Parameter(
-            Array(
-                # np.random.randn(num_outputs, num_inputs) * np.sqrt(2 / num_inputs),
-                np.random.randn(num_inputs, num_outputs) * np.sqrt(2 / num_inputs),
-                requires_grad=True,
-            )
+            xavier_normal_(Array(np.empty((num_inputs, num_outputs)), requires_grad=True))
         )
         self.bias = Parameter(zeros(num_outputs, requires_grad=True))
 

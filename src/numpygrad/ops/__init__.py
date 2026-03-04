@@ -33,6 +33,10 @@ def softplus(a: ArrayCoercible) -> Array:
     return dispatch(OperatorId.SOFTPLUS, a)
 
 
+def gelu(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.GELU, a)
+
+
 # elementwise
 
 
@@ -129,16 +133,26 @@ def cumprod(a: ArrayCoercible, axis=None) -> Array:
 # transforms
 
 
-def transpose(a: ArrayCoercible, axes: tuple[int, ...]) -> Array:
-    return dispatch(OperatorId.TRANSPOSE, a, axes=axes)
+def transpose(a: ArrayCoercible, *axes: int | tuple[int, ...]) -> Array:
+    axes_ = tuple(axes[0]) if len(axes) == 1 and isinstance(axes[0], (tuple, list)) else axes
+    return dispatch(OperatorId.TRANSPOSE, a, axes=axes_)
+
+
+def permute(a: ArrayCoercible, *dims: int | tuple[int, ...]) -> Array:
+    return transpose(a, *dims)
 
 
 def unsqueeze(a: ArrayCoercible, axis: int) -> Array:
     return dispatch(OperatorId.UNSQUEEZE, a, axis=axis)
 
 
-def reshape(a: ArrayCoercible, new_shape: tuple[int, ...] | int) -> Array:
-    return dispatch(OperatorId.RESHAPE, a, new_shape=new_shape)
+def reshape(a: ArrayCoercible, *new_shape: int | tuple[int, ...]) -> Array:
+    shape = (
+        new_shape[0]
+        if len(new_shape) == 1 and isinstance(new_shape[0], (tuple, list, int))
+        else new_shape
+    )
+    return dispatch(OperatorId.RESHAPE, a, new_shape=shape)
 
 
 def flatten(a: ArrayCoercible) -> Array:
@@ -153,12 +167,26 @@ def repeat(a: ArrayCoercible, repeats: int, axis=None) -> Array:
     return dispatch(OperatorId.REPEAT, a, repeats=repeats, axis=axis)
 
 
+def embedding(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.EMBEDDING, weight, indices)
+
+
 def stack(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
     return dispatch(OperatorId.STACK, arrays=arrays, axis=axis)
 
 
 def cat(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
     return dispatch(OperatorId.CAT, arrays=arrays, axis=axis)
+
+
+def triu(a: ArrayCoercible, k: int = 0) -> Array:
+    return dispatch(OperatorId.TRIU, a, k=k)
+
+
+def split(
+    a: ArrayCoercible, split_size_or_sections: int | list[int], dim: int = 0
+) -> tuple[Array, ...]:
+    return transforms.split(a, split_size_or_sections, dim=dim)
 
 
 # linear algebra
@@ -212,6 +240,10 @@ def setitem(a: ArrayCoercible, key: tuple[int, ...], value: ArrayCoercible) -> A
     return dispatch(OperatorId.SETITEM, a, key, value)
 
 
+def masked_fill(a: ArrayCoercible, mask: ArrayCoercible, value: float | int) -> Array:
+    return dispatch(OperatorId.MASKED_FILL, a, mask, value)
+
+
 __all__ = [
     # activations
     "activations",
@@ -220,9 +252,11 @@ __all__ = [
     "sigmoid",
     "tanh",
     "softplus",
+    "gelu",
     # special methods
     "special",
     "setitem",
+    "masked_fill",
     # elementwise
     "elementwise",
     "add",
@@ -238,13 +272,17 @@ __all__ = [
     "minimum",
     # transforms
     "transpose",
+    "permute",
     "unsqueeze",
     "reshape",
     "flatten",
     "squeeze",
     "repeat",
+    "embedding",
     "stack",
     "cat",
+    "triu",
+    "split",
     "transforms",
     # reductions
     "reductions",

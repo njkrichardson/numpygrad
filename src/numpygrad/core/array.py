@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 
 from numpygrad.core.device import DeviceId
@@ -115,6 +117,9 @@ class Array:
     def setitem(self, key: "ArrayCoercible | slice | tuple[slice, ...]", value: ArrayCoercible):
         return dispatch(OperatorId.SETITEM, self, key, value)
 
+    def masked_fill(self, mask: "Array", value: float | int) -> "Array":
+        return dispatch(OperatorId.MASKED_FILL, self, mask, value)
+
     def __gt__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.GT, self, other)
 
@@ -169,8 +174,22 @@ class Array:
     def abs(self) -> "Array":
         return dispatch(OperatorId.ABS, self)
 
-    def transpose(self, axes: tuple[int, ...]) -> "Array":
-        return dispatch(OperatorId.TRANSPOSE, self, axes=axes)
+    def transpose(self, *axes) -> "Array":
+        if len(axes) == 2 and all(isinstance(a, int) for a in axes):
+            # PyTorch-style: swap two dims, generate the full permutation
+            ndim = self.ndim
+            perm = list(range(ndim))
+            d0, d1 = axes[0] % ndim, axes[1] % ndim
+            perm[d0], perm[d1] = perm[d1], perm[d0]
+            axes_ = tuple(perm)
+        elif len(axes) == 1 and isinstance(axes[0], (tuple, list)):
+            axes_ = tuple(axes[0])
+        else:
+            axes_ = axes
+        return dispatch(OperatorId.TRANSPOSE, self, axes=axes_)
+
+    def permute(self, *dims) -> "Array":
+        return self.transpose(*dims)
 
     def reshape(self, *new_shape) -> "Array":
         shape = (
@@ -180,7 +199,8 @@ class Array:
         )
         return dispatch(OperatorId.RESHAPE, self, new_shape=shape)
 
-    def view(self, new_shape: tuple[int, ...] | int) -> "Array":
+    def view(self, *shape) -> "Array":
+        new_shape = shape[0] if len(shape) == 1 and isinstance(shape[0], (tuple, list)) else shape
         return self.reshape(new_shape)
 
     def mean(self, axis: tuple[int, ...] | int | None = None, keepdims: bool = False) -> "Array":
@@ -228,6 +248,9 @@ class Array:
     def round(self, decimals: int = 0) -> "Array":
         return Array(np.round(self.data, decimals=decimals), device=self.device)
 
+    def triu(self, x: ArrayCoercible, k: int = 0) -> "Array":
+        return dispatch(OperatorId.TRIU, self, x, k=k)
+
     # --- compositions of existing differentiable ops ---
 
     def std(self, axis=None, ddof: int = 0, keepdims: bool = False) -> "Array":
@@ -259,26 +282,33 @@ class Array:
     def sqrt(self) -> "Array":
         return self**0.5
 
+    def split(self, split_size_or_sections: "int | list[int]", dim: int = 0) -> "tuple[Array, ...]":
+        from numpygrad.ops.transforms import split as _split
+
+        return _split(self, split_size_or_sections, dim=dim)
+
     @property
     def T(self) -> "Array":
-        return self.transpose(axes=tuple(reversed(range(self.ndim))))
+        return self.transpose(tuple(reversed(range(self.ndim))))
 
     def backward(self, grad: np.ndarray | None = None) -> None:
         if grad is None:
             grad = np.ones_like(self.data)
 
-        # build topo order
+        # build topo order (iterative post-order DFS — avoids recursive closure cycles)
         topo = []
-        visited = set()
-
-        def build(node):
-            if id(node) not in visited:
-                visited.add(id(node))
-                for parent in getattr(node, "parents", ()):
-                    build(parent)
+        visited: set[int] = set()
+        stack: list[tuple[Any, bool]] = [(self, False)]
+        while stack:
+            node, processed = stack.pop()
+            if processed:
                 topo.append(node)
-
-        build(self)
+            elif id(node) not in visited:
+                visited.add(id(node))
+                stack.append((node, True))
+                for parent in getattr(node, "parents", ()):
+                    if id(parent) not in visited:
+                        stack.append((parent, False))
 
         # seed gradient
         self.grad = grad

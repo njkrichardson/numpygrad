@@ -1,13 +1,13 @@
 import numpy as np
 
-from numpygrad.core.array import Array
+from numpygrad.nn.module import Parameter
 from numpygrad.optim.optimizer import Optimizer
 
 
 class AdamW(Optimizer):
     def __init__(
         self,
-        params: list[Array],
+        params: list[Parameter],
         lr: float = 1e-3,
         betas: tuple[float, float] = (0.9, 0.999),
         eps: float = 1e-8,

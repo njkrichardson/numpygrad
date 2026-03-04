@@ -9,7 +9,7 @@ from numpygrad.ops.core import ensure_array
 
 class Context:
     def __init__(self):
-        self._saved_arrays: tuple[Array, ...] = ()
+        self._saved_arrays: tuple[Any, ...] = ()
         self._saved_versions: tuple[int, ...] = ()
         # Optional attributes set by individual ops in forward(), read in backward().
         # Using explicit fields so mypy knows they exist on Context.
@@ -28,6 +28,7 @@ class Context:
         self.reduction: str = ""
         self.targets: np.ndarray | None = None
         self.log_probs: np.ndarray | None = None
+        self.logits_shape: tuple[int, ...] = ()
         self.stride: tuple[int, int] = (1, 1)
         self.padding: tuple[int, int] = (0, 0)
         self.input_shape: tuple[int, ...] = ()
@@ -36,13 +37,14 @@ class Context:
         self.repeats: int = 1
         self.axis1: int = 0
         self.axis2: int = 1
+        self.mask: np.ndarray | None = None
 
     def store(self, *arrays) -> None:
         self._saved_arrays = arrays
         self._saved_versions = tuple(a._version if isinstance(a, Array) else -1 for a in arrays)
 
     @property
-    def saved_arrays(self) -> tuple[Array, ...]:
+    def saved_arrays(self) -> tuple[Any, ...]:
         for arr, v in zip(self._saved_arrays, self._saved_versions, strict=True):
             if isinstance(arr, Array) and v != -1 and arr._version != v:
                 raise RuntimeError(

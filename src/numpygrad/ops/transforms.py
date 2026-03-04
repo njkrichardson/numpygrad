@@ -365,3 +365,59 @@ class Repeat(Function):
 @register(OperatorId.REPEAT, op_requirements=OperatorRequirements.Autograd)
 def repeat_autograd(a: ArrayCoercible, repeats: int, axis=None) -> Array:
     return Repeat.apply(a, repeats, axis)
+
+
+@register(OperatorId.EMBEDDING)
+def embedding_cpu(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    weight = ensure_array(weight)
+    idx = ensure_array(indices).data.astype(int)
+    return Array(weight.data[idx], device="cpu_np", requires_grad=False)
+
+
+class EmbeddingLookup(Function):
+    @staticmethod
+    def forward(ctx: Context, weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+        weight = ensure_array(weight)
+        idx = ensure_array(indices).data.astype(int)
+        ctx.input_shape = weight.shape
+        ctx.key = idx
+        return Array(weight.data[idx], device=weight.device, requires_grad=weight.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        grad_weight = np.zeros(ctx.input_shape, dtype=grad.dtype)
+        np.add.at(grad_weight, ctx.key, grad)
+        return grad_weight, None
+
+
+@register(OperatorId.EMBEDDING, op_requirements=OperatorRequirements.Autograd)
+def embedding_autograd(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
+    return EmbeddingLookup.apply(weight, indices)
+
+
+@register(OperatorId.TRIU)
+def triu_cpu(a: ArrayCoercible, k: int = 0) -> Array:
+    a = ensure_array(a)
+    return Array(np.triu(a.data, k=k), device="cpu_np", requires_grad=False)
+
+
+def split(
+    a: ArrayCoercible, split_size_or_sections: int | list[int], dim: int = 0
+) -> tuple[Array, ...]:
+    a = ensure_array(a)
+    n = a.shape[dim]
+    if isinstance(split_size_or_sections, int):
+        size = split_size_or_sections
+        sections = [size] * (n // size)
+        if n % size:
+            sections.append(n % size)
+    else:
+        sections = list(split_size_or_sections)
+    ndim = a.ndim
+    results = []
+    start = 0
+    for s in sections:
+        key = (slice(None),) * dim + (slice(start, start + s),) + (slice(None),) * (ndim - dim - 1)
+        results.append(a[key])
+        start += s
+    return tuple(results)

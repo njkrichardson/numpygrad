@@ -25,14 +25,13 @@ class Softmax(Function):
         exp_x = np.exp(x)
         s = exp_x / np.sum(exp_x, axis=axis, keepdims=True)
         out = Array(s, device=a.device, requires_grad=a.requires_grad)
-        ctx.store(a, out)
+        ctx.store(s)
         ctx.axis = axis
         return out
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
-        _, out = ctx.saved_arrays
-        s = out.data if isinstance(out, Array) else out
+        (s,) = ctx.saved_arrays
         dotprod = np.sum(s * grad, axis=ctx.axis, keepdims=True)
         return s * (grad - dotprod), None  # type: ignore[return-value]
 
@@ -57,14 +56,13 @@ class LogSoftmax(Function):
         x = a.data - np.max(a.data, axis=axis, keepdims=True)
         lsm = x - np.log(np.sum(np.exp(x), axis=axis, keepdims=True))
         out = Array(lsm, device=a.device, requires_grad=a.requires_grad)
-        ctx.store(a, out)
+        ctx.store(lsm)
         ctx.axis = axis
         return out
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
-        _, out = ctx.saved_arrays
-        lsm = out.data if isinstance(out, Array) else out
+        (lsm,) = ctx.saved_arrays
         s = np.exp(lsm)
         return grad - s * np.sum(grad, axis=ctx.axis, keepdims=True), None  # type: ignore[return-value]
 
@@ -87,13 +85,12 @@ class Sigmoid(Function):
         a = ensure_array(a)
         s = 1.0 / (1.0 + np.exp(-a.data))
         out = Array(s, device=a.device, requires_grad=a.requires_grad)
-        ctx.store(a, out)
+        ctx.store(s)
         return out
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
-        _, out = ctx.saved_arrays
-        s = out.data
+        (s,) = ctx.saved_arrays
         return (grad * s * (1.0 - s),)
 
 
@@ -115,13 +112,12 @@ class Tanh(Function):
         a = ensure_array(a)
         t = np.tanh(a.data)
         out = Array(t, device=a.device, requires_grad=a.requires_grad)
-        ctx.store(a, out)
+        ctx.store(t)
         return out
 
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
-        _, out = ctx.saved_arrays
-        t = out.data
+        (t,) = ctx.saved_arrays
         return (grad * (1.0 - t**2),)
 
 
@@ -153,3 +149,40 @@ class SoftPlus(Function):
 @register(OperatorId.SOFTPLUS, op_requirements=OperatorRequirements.Autograd)
 def softplus_autograd(a: ArrayCoercible) -> Array:
     return SoftPlus.apply(a)
+
+
+_SQRT_2_OVER_PI = np.sqrt(2.0 / np.pi)
+_GELU_COEFF = 0.044715
+
+
+@register(OperatorId.GELU)
+def gelu_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    x = a.data
+    out = 0.5 * x * (1.0 + np.tanh(_SQRT_2_OVER_PI * (x + _GELU_COEFF * x**3)))
+    return Array(out, device=a.device, requires_grad=False)
+
+
+class GELU(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        x = a.data
+        out = 0.5 * x * (1.0 + np.tanh(_SQRT_2_OVER_PI * (x + _GELU_COEFF * x**3)))
+        return Array(out, device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        (a,) = ctx.saved_arrays
+        x = a.data
+        inner = _SQRT_2_OVER_PI * (x + _GELU_COEFF * x**3)
+        t = np.tanh(inner)
+        du_dx = _SQRT_2_OVER_PI * (1.0 + 3.0 * _GELU_COEFF * x**2)
+        d_gelu = 0.5 * (1.0 + t) + 0.5 * x * (1.0 - t**2) * du_dx
+        return (grad * d_gelu,)
+
+
+@register(OperatorId.GELU, op_requirements=OperatorRequirements.Autograd)
+def gelu_autograd(a: ArrayCoercible) -> Array:
+    return GELU.apply(a)

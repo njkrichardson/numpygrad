@@ -1,5 +1,6 @@
 from numpygrad.core.array import Array
 from numpygrad.nn.module import Module
+from numpygrad.ops import gelu as gelu_op
 from numpygrad.ops import relu, sigmoid, softplus
 from numpygrad.ops import tanh as tanh_op
 
@@ -22,3 +23,8 @@ class Tanh(Module):
 class SoftPlus(Module):
     def forward(self, x: Array) -> Array:
         return softplus(x)
+
+
+class GELU(Module):
+    def forward(self, x: Array) -> Array:
+        return gelu_op(x)
