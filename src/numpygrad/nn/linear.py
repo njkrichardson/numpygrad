@@ -12,14 +12,15 @@ class Linear(Module):
         self.num_outputs = num_outputs
         self.weight = Parameter(
             Array(
-                np.random.randn(num_outputs, num_inputs) * np.sqrt(2 / num_inputs),
+                # np.random.randn(num_outputs, num_inputs) * np.sqrt(2 / num_inputs),
+                np.random.randn(num_inputs, num_outputs) * np.sqrt(2 / num_inputs),
                 requires_grad=True,
             )
         )
         self.bias = Parameter(zeros(num_outputs, requires_grad=True))
 
     def forward(self, x: Array) -> Array:
-        return (x @ self.weight.T) + self.bias
+        return (x @ self.weight) + self.bias
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(num_inputs={self.num_inputs}, \

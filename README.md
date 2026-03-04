@@ -26,7 +26,7 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 ### Neural Nets
 - **Modules** - `Linear`, `Conv2d`, `MultiHeadAttention`, etc.
 - **Optimizers** - `AdamW`, `SGD`.
-- **Activations** - `ReLU`, `Tanh`, `Sigmoid`. 
+- **Activations** - `ReLU`, `Tanh`, `Sigmoid`, `SoftPlus`. 
 - **Losses** - `CrossEntropy`, `mse`. 
 
 ## Installation

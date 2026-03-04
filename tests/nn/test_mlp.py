@@ -57,7 +57,7 @@ def test_mlp_forward(config):
     layers = []
     sizes = [num_inputs] + hidden_sizes + [num_outputs]
     for in_dim, out_dim in zip(sizes[:-1], sizes[1:], strict=False):
-        weight = FLOAT_DISTRIBUTION((out_dim, in_dim)).astype(np.float64)
+        weight = FLOAT_DISTRIBUTION((in_dim, out_dim)).astype(np.float64)
         bias = FLOAT_DISTRIBUTION((out_dim,)).astype(np.float64)
         layers.append((weight, bias))
 
@@ -83,7 +83,7 @@ def test_mlp_forward(config):
 
     torch_mlp = TorchMLP()
     for i, (weight, bias) in enumerate(layers):
-        torch_mlp.layers[i].weight.data = torch.from_numpy(weight)
+        torch_mlp.layers[i].weight.data = torch.from_numpy(weight.T)
         torch_mlp.layers[i].bias.data = torch.from_numpy(bias)
 
     x = FLOAT_DISTRIBUTION(input_shape).astype(np.float64)
@@ -104,7 +104,7 @@ def test_mlp_backward(config):
     layers = []
     sizes = [num_inputs] + hidden_sizes + [num_outputs]
     for in_dim, out_dim in zip(sizes[:-1], sizes[1:], strict=False):
-        weight = FLOAT_DISTRIBUTION((out_dim, in_dim)).astype(np.float64)
+        weight = FLOAT_DISTRIBUTION((in_dim, out_dim)).astype(np.float64)
         bias = FLOAT_DISTRIBUTION((out_dim,)).astype(np.float64)
         layers.append((weight, bias))
 
@@ -130,7 +130,7 @@ def test_mlp_backward(config):
 
     torch_mlp = TorchMLP()
     for i, (weight, bias) in enumerate(layers):
-        torch_mlp.layers[i].weight.data = torch.from_numpy(weight)
+        torch_mlp.layers[i].weight.data = torch.from_numpy(weight.T)
         torch_mlp.layers[i].bias.data = torch.from_numpy(bias)
 
     x = FLOAT_DISTRIBUTION(input_shape).astype(np.float64)
@@ -150,6 +150,6 @@ def test_mlp_backward(config):
         gwt = next(grad_iter)
         gbt = next(grad_iter)
         assert ngp_layer.weight.grad is not None
-        check_equality(ngp_layer.weight.grad, gwt.detach().numpy(), rtol=1e-8, atol=1e-10)
+        check_equality(ngp_layer.weight.grad, gwt.detach().numpy().T, rtol=1e-8, atol=1e-10)
         assert ngp_layer.bias.grad is not None
-        check_equality(ngp_layer.bias.grad, gbt.detach().numpy(), rtol=1e-8, atol=1e-10)
+        check_equality(ngp_layer.bias.grad, gbt.detach().numpy().T, rtol=1e-8, atol=1e-10)

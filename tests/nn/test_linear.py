@@ -36,10 +36,10 @@ def configuration(draw):
 def test_linear_forward(config):
     input_shape, output_shape = config
     num_inputs, num_outputs = input_shape[-1], output_shape[-1]
-    weight = FLOAT_DISTRIBUTION((num_outputs, num_inputs)).astype(np.float64)
+    weight = FLOAT_DISTRIBUTION((num_inputs, num_outputs)).astype(np.float64)
 
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=False)
-    torch_linear.weight.data = torch.from_numpy(weight)
+    torch_linear.weight.data = torch.from_numpy(weight.T)
     linear = Linear(num_inputs, num_outputs)
     linear.weight.data = weight
     linear.bias.data = np.zeros(num_outputs)
@@ -53,7 +53,7 @@ def test_linear_forward(config):
     bias = FLOAT_DISTRIBUTION((num_outputs,)).astype(np.float64)
 
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=True)
-    torch_linear.weight.data = torch.from_numpy(weight)
+    torch_linear.weight.data = torch.from_numpy(weight.T)
     torch_linear.bias.data = torch.from_numpy(bias)
     linear2 = Linear(num_inputs, num_outputs)
     linear2.weight.data = weight
@@ -71,10 +71,10 @@ def test_linear_forward(config):
 def test_linear_backward(config):
     input_shape, output_shape = config
     num_inputs, num_outputs = input_shape[-1], output_shape[-1]
-    weight = FLOAT_DISTRIBUTION((num_outputs, num_inputs)).astype(np.float64)
+    weight = FLOAT_DISTRIBUTION((num_inputs, num_outputs)).astype(np.float64)
 
     torch_linear = torch.nn.Linear(num_inputs, num_outputs, bias=False)
-    torch_linear.weight.data = torch.from_numpy(weight)
+    torch_linear.weight.data = torch.from_numpy(weight.T)
     linear = Linear(num_inputs, num_outputs)
     linear.weight.data = weight
     linear.bias.data = np.zeros(num_outputs)
@@ -90,4 +90,4 @@ def test_linear_backward(config):
         grad_outputs=torch.ones_like(yt),
     )[0]
     assert linear.weight.grad is not None
-    check_equality(linear.weight.grad, gwt.detach().numpy())
+    check_equality(linear.weight.grad, gwt.detach().numpy().T)
