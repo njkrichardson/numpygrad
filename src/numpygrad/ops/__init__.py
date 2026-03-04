@@ -165,6 +165,10 @@ def cat(arrays: tuple[ArrayCoercible, ...], axis: int = 0) -> Array:
     return dispatch(OperatorId.CAT, arrays=arrays, axis=axis)
 
 
+def triu(a: ArrayCoercible, k: int = 0) -> Array:
+    return dispatch(OperatorId.TRIU, a, k=k)
+
+
 # linear algebra
 
 
@@ -250,6 +254,7 @@ __all__ = [
     "embedding",
     "stack",
     "cat",
+    "triu",
     "transforms",
     # reductions
     "reductions",

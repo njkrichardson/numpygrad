@@ -228,6 +228,9 @@ class Array:
     def round(self, decimals: int = 0) -> "Array":
         return Array(np.round(self.data, decimals=decimals), device=self.device)
 
+    def triu(self, x: ArrayCoercible, k: int = 0) -> "Array":
+        return dispatch(OperatorId.TRIU, self, x, k=k)
+
     # --- compositions of existing differentiable ops ---
 
     def std(self, axis=None, ddof: int = 0, keepdims: bool = False) -> "Array":

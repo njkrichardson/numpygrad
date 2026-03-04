@@ -49,6 +49,7 @@ class OperatorId(enum.StrEnum):
     CAT = enum.auto()
     SQUEEZE = enum.auto()
     REPEAT = enum.auto()
+    TRIU = enum.auto()
 
     # convolution
     CONV2D = enum.auto()

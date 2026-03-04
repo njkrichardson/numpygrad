@@ -54,6 +54,7 @@ from numpygrad.ops import (
     tanh,
     trace,
     transpose,
+    triu,
     unsqueeze,
     var,
 )
@@ -101,6 +102,7 @@ __all__ = [
     "unsqueeze",
     "reshape",
     "transpose",
+    "triu",
     "norm",
     "stack",
     "cat",

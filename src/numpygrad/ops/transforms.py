@@ -393,3 +393,9 @@ class EmbeddingLookup(Function):
 @register(OperatorId.EMBEDDING, op_requirements=OperatorRequirements.Autograd)
 def embedding_autograd(weight: ArrayCoercible, indices: ArrayCoercible) -> Array:
     return EmbeddingLookup.apply(weight, indices)
+
+
+@register(OperatorId.TRIU)
+def triu_cpu(a: ArrayCoercible, k: int = 0) -> Array:
+    a = ensure_array(a)
+    return Array(np.triu(a.data, k=k), device="cpu_np", requires_grad=False)
