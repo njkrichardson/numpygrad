@@ -179,3 +179,36 @@ def test_mlp_sigmoid_activation():
 def test_mlp_bad_activation():
     with pytest.raises(ValueError, match="not supported"):
         MLP(4, [8], 2, activation="not implemented")
+
+
+# ---------------------------------------------------------------------------
+# train() / eval()
+# ---------------------------------------------------------------------------
+
+
+def test_module_training_default():
+    assert Linear(4, 4).training is True
+
+
+def test_train_eval_toggle():
+    m = Linear(4, 4)
+    m.eval()
+    assert m.training is False
+    m.train()
+    assert m.training is True
+
+
+def test_train_propagates_to_submodules():
+    model = MLP(4, [8], 2)
+    model.eval()
+    for mod in model._modules.values():
+        assert mod.training is False
+    model.train()
+    for mod in model._modules.values():
+        assert mod.training is True
+
+
+def test_train_returns_self():
+    m = Linear(4, 4)
+    assert m.train() is m
+    assert m.eval() is m
