@@ -41,3 +41,4 @@ No C++ extensions, no CUDA — just readable, hackable Python.
    examples/regression_1d
    examples/classification_2d
    examples/mnist
+   examples/gpt2

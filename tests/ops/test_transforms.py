@@ -11,6 +11,7 @@ from tests.strategies import (
     generic_array,
     reshape_args,
     slice_args,
+    split_args,
     stack_arrays,
     transpose_args,
     unsqueeze_args,
@@ -316,3 +317,132 @@ def test_repeat_functional():
     arr = np.random.randn(3, 4).astype(np.float64)
     x = npg.array(arr)
     check_equality(npg.repeat(x, 2, axis=1).data, np.repeat(arr, 2, axis=1))
+
+
+# --- split ---
+
+
+@given(split_args())
+def test_split_forward(data):
+    arr, split_size_or_sections, dim = data
+    chunks = npg.split(npg.array(arr), split_size_or_sections, dim=dim)
+    torch_chunks = torch.split(torch.from_numpy(arr), split_size_or_sections, dim=dim)
+    assert len(chunks) == len(torch_chunks)
+    for c, tc in zip(chunks, torch_chunks, strict=True):
+        check_equality(c.data, tc.numpy())
+
+
+@given(split_args(dtypes=FLOAT_DTYPES))
+def test_split_backward(data):
+    arr, split_size_or_sections, dim = data
+    x = npg.array(arr, requires_grad=True)
+    chunks = npg.split(x, split_size_or_sections, dim=dim)
+    s = chunks[0].sum()
+    for c in chunks[1:]:
+        s = s + c.sum()
+    s.backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    torch_chunks = torch.split(xt, split_size_or_sections, dim=dim)
+    st_ = torch.stack([c.sum() for c in torch_chunks]).sum()
+    st_.backward()
+
+    check_equality(x.grad, xt.grad.numpy())
+
+
+def test_split_int_uneven():
+    """Last chunk is smaller when size doesn't divide evenly."""
+    arr = np.arange(7, dtype=np.float64)
+    chunks = npg.split(npg.array(arr), 3, dim=0)
+    torch_chunks = torch.split(torch.from_numpy(arr), 3, dim=0)
+    assert len(chunks) == len(torch_chunks) == 3
+    for c, tc in zip(chunks, torch_chunks, strict=True):
+        check_equality(c.data, tc.numpy())
+
+
+def test_split_list_sections():
+    arr = np.arange(6, dtype=np.float64).reshape(2, 3)
+    chunks = npg.split(npg.array(arr), [1, 2], dim=1)
+    torch_chunks = torch.split(torch.from_numpy(arr), [1, 2], dim=1)
+    for c, tc in zip(chunks, torch_chunks, strict=True):
+        check_equality(c.data, tc.numpy())
+
+
+def test_split_method():
+    """Array.split method is equivalent to npg.split."""
+    arr = np.arange(6, dtype=np.float64)
+    x = npg.array(arr)
+    pairs = zip(x.split(3), npg.split(x, 3), strict=True)
+    assert all(np.array_equal(a.data, b.data) for a, b in pairs)
+
+
+# --- dual-mode calling conventions ---
+
+
+def test_view_tuple():
+    x = npg.array(np.arange(6, dtype=np.float64))
+    check_equality(x.view((2, 3)).data, np.arange(6, dtype=np.float64).reshape(2, 3))
+
+
+def test_view_unpacked():
+    x = npg.array(np.arange(6, dtype=np.float64))
+    check_equality(x.view(2, 3).data, np.arange(6, dtype=np.float64).reshape(2, 3))
+
+
+def test_transpose_tuple():
+    arr = np.arange(6, dtype=np.float64).reshape(2, 3)
+    check_equality(npg.array(arr).transpose((1, 0)).data, arr.T)
+
+
+def test_transpose_unpacked():
+    arr = np.arange(6, dtype=np.float64).reshape(2, 3)
+    check_equality(npg.array(arr).transpose(1, 0).data, arr.T)
+
+
+def test_npg_reshape_tuple():
+    arr = np.arange(6, dtype=np.float64)
+    check_equality(npg.reshape(npg.array(arr), (2, 3)).data, arr.reshape(2, 3))
+
+
+def test_npg_reshape_unpacked():
+    arr = np.arange(6, dtype=np.float64)
+    check_equality(npg.reshape(npg.array(arr), 2, 3).data, arr.reshape(2, 3))
+
+
+def test_npg_transpose_tuple():
+    arr = np.arange(6, dtype=np.float64).reshape(2, 3)
+    check_equality(npg.transpose(npg.array(arr), (1, 0)).data, arr.T)
+
+
+def test_npg_transpose_unpacked():
+    arr = np.arange(6, dtype=np.float64).reshape(2, 3)
+    check_equality(npg.transpose(npg.array(arr), 1, 0).data, arr.T)
+
+
+# --- permute ---
+
+
+@given(transpose_args(dtypes=FLOAT_DTYPES))
+def test_permute_matches_transpose(data):
+    arr, axes = data
+    x = npg.array(arr)
+    check_equality(x.permute(*axes).data, x.transpose(*axes).data)
+
+
+@given(transpose_args(dtypes=FLOAT_DTYPES))
+def test_permute_backward(data):
+    arr, axes = data
+    x = npg.array(arr, requires_grad=True)
+    x.permute(*axes).sum().backward()
+
+    xt = torch.from_numpy(arr).requires_grad_(True)
+    xt.permute(*axes).sum().backward()
+    check_equality(x.grad, xt.grad.numpy())
+
+
+def test_npg_permute():
+    arr = np.arange(24, dtype=np.float64).reshape(2, 3, 4)
+    check_equality(
+        npg.permute(npg.array(arr), 2, 0, 1).data,
+        np.transpose(arr, (2, 0, 1)),
+    )

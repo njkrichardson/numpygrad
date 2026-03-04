@@ -80,3 +80,31 @@ class Setitem(Function):
 @register(OperatorId.SETITEM, op_requirements=OperatorRequirements.Autograd)
 def setitem_autograd(a: ArrayCoercible, key: tuple[int, ...], value: ArrayCoercible) -> Array:
     return Setitem.apply(a, key, value)
+
+
+@register(OperatorId.MASKED_FILL)
+def masked_fill_cpu(a: ArrayCoercible, mask: ArrayCoercible, value: float | int) -> Array:
+    a = ensure_array(a)
+    mask_data = ensure_array(mask).data.astype(bool)
+    out = np.where(mask_data, value, a.data)
+    return Array(out, device=a.device, requires_grad=False)
+
+
+class MaskedFill(Function):
+    @staticmethod
+    def forward(ctx, a: ArrayCoercible, mask: ArrayCoercible, value: float | int) -> Array:
+        a = ensure_array(a)
+        mask_data = ensure_array(mask).data.astype(bool)
+        ctx.mask = mask_data
+        out = np.where(mask_data, value, a.data)
+        return Array(out, device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        grad_a = np.where(ctx.mask, 0, grad)
+        return grad_a, None, None
+
+
+@register(OperatorId.MASKED_FILL, op_requirements=OperatorRequirements.Autograd)
+def masked_fill_autograd(a: ArrayCoercible, mask: ArrayCoercible, value: float | int) -> Array:
+    return MaskedFill.apply(a, mask, value)

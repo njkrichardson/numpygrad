@@ -399,3 +399,25 @@ def embedding_autograd(weight: ArrayCoercible, indices: ArrayCoercible) -> Array
 def triu_cpu(a: ArrayCoercible, k: int = 0) -> Array:
     a = ensure_array(a)
     return Array(np.triu(a.data, k=k), device="cpu_np", requires_grad=False)
+
+
+def split(
+    a: ArrayCoercible, split_size_or_sections: int | list[int], dim: int = 0
+) -> tuple[Array, ...]:
+    a = ensure_array(a)
+    n = a.shape[dim]
+    if isinstance(split_size_or_sections, int):
+        size = split_size_or_sections
+        sections = [size] * (n // size)
+        if n % size:
+            sections.append(n % size)
+    else:
+        sections = list(split_size_or_sections)
+    ndim = a.ndim
+    results = []
+    start = 0
+    for s in sections:
+        key = (slice(None),) * dim + (slice(start, start + s),) + (slice(None),) * (ndim - dim - 1)
+        results.append(a[key])
+        start += s
+    return tuple(results)
