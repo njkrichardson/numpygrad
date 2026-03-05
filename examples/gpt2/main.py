@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+from pathlib import Path
 
 import numpy as np
 
@@ -7,6 +8,7 @@ import numpygrad as npg
 import numpygrad.nn as nn
 from examples.gpt2.data import ShakespeareDataset
 from numpygrad.utils.data import DataLoader
+from numpygrad.utils.io import load_checkpoint, save_checkpoint
 
 npg.manual_seed(0)
 Log = npg.Log(__name__)
@@ -30,6 +32,13 @@ parser.add_argument_group("sampling")
 parser.add_argument("--initial-sample-length", type=int, default=256)
 parser.add_argument("--final-sample-length", type=int, default=1_024)
 parser.add_argument("--temperature", type=float, default=1.0)
+
+parser.add_argument("--tokenizer", choices=["char", "bpe"], default="bpe")
+
+parser.add_argument_group("checkpointing")
+parser.add_argument("--checkpoint-dir", type=str, default=None)
+parser.add_argument("--save-every", type=int, default=500)
+parser.add_argument("--resume", type=str, default=None)
 
 
 @dataclasses.dataclass
@@ -193,7 +202,7 @@ def main(args: argparse.Namespace):
         dropout=args.dropout,
     )
 
-    dataset = ShakespeareDataset(config.context_size)
+    dataset = ShakespeareDataset(config.context_size, tokenizer=args.tokenizer)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
     config.vocab_size = dataset.vocab_size
@@ -217,7 +226,18 @@ def main(args: argparse.Namespace):
 
     optimizer = npg.optim.AdamW(net.parameters(), lr=1e-3)
 
+    start_step = 0
+    if args.resume:
+        ckpt = load_checkpoint(args.resume)
+        net.load_state_dict(ckpt["model_state_dict"])
+        optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        start_step = ckpt["step"] + 1
+        Log.info(f"Resumed from step {ckpt['step']}")
+
     for step, (x, target) in enumerate(dataloader):
+        if step < start_step:
+            continue
+
         optimizer.zero_grad()
         logits = net(x)
         loss = nn.cross_entropy_loss(logits, target)
@@ -227,8 +247,16 @@ def main(args: argparse.Namespace):
         if step % args.report_every == 0:
             Log.info(f"Step {step}: loss={estimate_loss():.4f}")
 
+        if args.checkpoint_dir and step % args.save_every == 0:
+            ckpt_path = Path(args.checkpoint_dir) / f"checkpoint_{step:06d}.pkl"
+            save_checkpoint(ckpt_path, step=step, model=net, optimizer=optimizer)
+
         if step >= args.num_steps:
             break
+
+    if args.checkpoint_dir:
+        ckpt_path = Path(args.checkpoint_dir) / f"checkpoint_{step:06d}.pkl"
+        save_checkpoint(ckpt_path, step=step, model=net, optimizer=optimizer)
 
     Log.info(
         f"Final sample: {dataset.decode(sample(net, max_new_tokens=args.final_sample_length, temperature=args.temperature))}"  # noqa: E501

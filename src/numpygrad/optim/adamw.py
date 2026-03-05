@@ -20,6 +20,14 @@ class AdamW(Optimizer):
         self.weight_decay = weight_decay
         self._state: dict[int, dict] = {}  # per-param: {t, m, v}
 
+    def state_dict(self) -> list[dict]:
+        return [self._state.get(id(p), {}) for p in self.params]
+
+    def load_state_dict(self, state: list[dict]) -> None:
+        for param, s in zip(self.params, state, strict=True):
+            if s:
+                self._state[id(param)] = s
+
     def step(self) -> None:
         b1, b2 = self.betas
         for param in self.params:

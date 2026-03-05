@@ -43,43 +43,73 @@ And 45 minutes later, it speaks at least some kind of proto-English language! Le
 
 .. code-block:: text
 
-    Farthink's birry-day, down nor portuou.
-    What cames me farewells like, to a times on game.
+    COMINIUS:
+    Nine, I two it-ay because
+    Till 'twere but equied big last!' Blanger, un withouts,
+    Thy friend rude, or wantouch Romeo. Here have kneels: ounis, keep you
+    To be even find and full of second worse: I ree say!
 
-    MENRY BOPHELLAND:
-    Now, good matters herein;
-    Ere I of thee huse's now from olding be,
-    Be shall and not live directed to half a garment-speed in
-    A pervecred temple: and power for'd sweetms
-    on that Warwick he is cusey.
+    DUCHESS OF YORK:
+    Nay, be thing?
+
+    STINGS:
+    The assible tender of the breast,
+    To fall the absence in this tower itself abiliory.
+    Will you be blessing fancy,
+    To give outward upon. Mark for your Naples;
+    Upon you have not past a meritent woman:
+    The prottle golden person, have good, hour some do break
+    together, our love; and pray.'d you
+    I mean not to be dvertender, use themselves:
+    Ah, our spirits are not: accentible
+    'Twise; and our enemyour as most say.
+
+    LUCENTIO:
+    Prithee, my life, he hath with you, and saved
+    upon him. Here is receive against the head.
+    I pray you'll saw 'Come hither come;
+    Not mark the people I dower to ceaear
+    The rashly of his audible, fair suns ever
+    Their apt in thine eyes and weary not;
+    My lord, is not only to too; compine. So, fare you
+    And you are all to be friend and she will, let us giveli to friends?
 
     BENVOLIO:
-    Supplish a stindrer age, gentle Horn; for I
-    Beggary thoughts, parting unjury'st comes; he endure
-    To these obedy the glound of such leisurarly
-    Eschadienle! Pomfortunes
-    And yet sorrow to delass Iitch in Friendsded,
-    Twhen I first his cause idle is house
-    cardon is cares
-    Thine shoronge a coldler corning good.
+    Alas is rememberance!
 
-    NORTHUMBERLAND:
-    I sear our too other: darrel, have being preRtify
-    earth dissure flesh. My follows! Olden heavy face
-    Music and light moy owers of bring appleased.
+    ESTIAN:
+    Ah, the thing that I trouble him, hear not with me.
 
-    ROMEOSS:
-    Out, and yet give so sighout.
+    EDWARD:
+    Call it in Rutland: we have not singled key,
+    Yet I shall so, in my exe,
+    He shall away on the wagow of yourselve?' do you
+    Even o' the brother; but whereify hearese cadies
+    The stewes of the fac officient counter.
 
-    BLUHEMOOP:
-    The bear free of almoster ire, to with strangewn remembaw
-    and infectsdoms famely argood! Who less her one thou?
+    ROMEO:
+    Is it a content our tongue.
 
-    ANGELO:
-    And 'Clown with says such as again a marriage.
+    VINCENTIO:
+    Ay, man, you should love your mind.
 
-    PARIS:
-    You prais
+    BICA:
+    Well, the ribunless lackers, convenient is awed upon,
+    Even together, remembers his silvance and drink you!
+
+    QUEEN ELIZABETH:
+    Lords, her hath all of wealer inchange in post
+    All fellow of these his own is fainted ofun,
+    And she dismiss'd thy children, twi herable withcland.
+
+    ROMEO:
+    I dare thee more let than thou hats from the gits in art:
+    Nay, let up, so, in the birdshires.
+
+    Nurse:
+    Romer, you may again Margaret,
+    I have stood like to Choot, when may have it fought
+    To like to spea
 
 Architecture
 ------------

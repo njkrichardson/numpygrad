@@ -60,6 +60,14 @@ class Module:
             state[name] = buffer.data
         return state
 
+    def load_state_dict(self, state: dict) -> None:
+        for name, param in self._parameters.items():
+            param.data = state[name]
+        for name, module in self._modules.items():
+            module.load_state_dict(state[name])
+        for name, buffer in self._buffers.items():
+            buffer.data = state[name]
+
     def parameters(self):
         """Return all parameters in this module and submodules (recursive)."""
         result = list(self._parameters.values())
