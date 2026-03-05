@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.random as npr
 
 from numpygrad.core.array import Array
 
@@ -33,20 +32,3 @@ def linspace(start: float, stop: float, num: int) -> Array:
 
 def eye(n: int) -> Array:
     return Array(np.eye(n))
-
-
-def randn(shape: tuple[int, ...] | int = (1,), **kwargs) -> Array:
-    if isinstance(shape, int):
-        shape = (shape,)
-    return Array(npr.randn(*shape), **kwargs)
-
-
-def randint(
-    low: int, high: int | None = None, size: tuple[int, ...] | int = (1,), **kwargs
-) -> Array:
-    if high is None:
-        high = low
-        low = 0
-    if isinstance(size, int):
-        size = (size,)
-    return Array(npr.randint(low, high, size), **kwargs)

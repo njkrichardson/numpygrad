@@ -1,12 +1,11 @@
 import numpygrad.configuration as configuration
 import numpygrad.optim as optim
+import numpygrad.random as random
 import numpygrad.utils as utils
 from numpygrad.core import array, ndarray
 from numpygrad.core.array_creation import (
     arange,
     ones,
-    randint,
-    randn,
     zeros,
     zeros_like,
 )
@@ -72,7 +71,7 @@ __all__ = [
     "Log",
     "utils",
     "manual_seed",
-    "randn",
+    "random",
     "zeros",
     "ones",
     "zeros_like",
@@ -90,7 +89,6 @@ __all__ = [
     "mean",
     "clip",
     "arange",
-    "randint",
     "maximum",
     "minimum",
     "float32",

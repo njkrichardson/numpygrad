@@ -5,8 +5,9 @@ import pytest
 
 import numpygrad as npg
 from numpygrad.core.array import Array
-from numpygrad.core.array_creation import arange, eye, linspace, randint, randn, zeros_like
+from numpygrad.core.array_creation import arange, eye, linspace, zeros_like
 from numpygrad.core.contexts import no_grad
+from numpygrad.random import randint, randn
 
 # ---------------------------------------------------------------------------
 # Array construction
