@@ -359,3 +359,201 @@ class Minimum(Function):
 @register(OperatorId.MINIMUM, op_requirements=OperatorRequirements.Autograd)
 def minimum_autograd(a: ArrayCoercible, b: ArrayCoercible) -> Array:
     return Minimum.apply(a, b)
+
+
+@register(OperatorId.SIN)
+def sin_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.sin(a.data), device="cpu_np", requires_grad=False)
+
+
+class Sin(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.sin(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (grad * np.cos(a.data),)
+
+
+@register(OperatorId.SIN, op_requirements=OperatorRequirements.Autograd)
+def sin_autograd(a: ArrayCoercible) -> Array:
+    return Sin.apply(a)
+
+
+@register(OperatorId.COS)
+def cos_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.cos(a.data), device="cpu_np", requires_grad=False)
+
+
+class Cos(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.cos(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (grad * -np.sin(a.data),)
+
+
+@register(OperatorId.COS, op_requirements=OperatorRequirements.Autograd)
+def cos_autograd(a: ArrayCoercible) -> Array:
+    return Cos.apply(a)
+
+
+@register(OperatorId.TAN)
+def tan_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.tan(a.data), device="cpu_np", requires_grad=False)
+
+
+class Tan(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.tan(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (grad / np.cos(a.data) ** 2,)
+
+
+@register(OperatorId.TAN, op_requirements=OperatorRequirements.Autograd)
+def tan_autograd(a: ArrayCoercible) -> Array:
+    return Tan.apply(a)
+
+
+@register(OperatorId.FLOOR)
+def floor_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.floor(a.data), device="cpu_np", requires_grad=False)
+
+
+class Floor(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.floor(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (np.zeros_like(a.data),)
+
+
+@register(OperatorId.FLOOR, op_requirements=OperatorRequirements.Autograd)
+def floor_autograd(a: ArrayCoercible) -> Array:
+    return Floor.apply(a)
+
+
+@register(OperatorId.CEIL)
+def ceil_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.ceil(a.data), device="cpu_np", requires_grad=False)
+
+
+class Ceil(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.ceil(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (np.zeros_like(a.data),)
+
+
+@register(OperatorId.CEIL, op_requirements=OperatorRequirements.Autograd)
+def ceil_autograd(a: ArrayCoercible) -> Array:
+    return Ceil.apply(a)
+
+
+@register(OperatorId.SIGN)
+def sign_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(np.sign(a.data), device="cpu_np", requires_grad=False)
+
+
+class Sign(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        ctx.store(a)
+        return Array(np.sign(a.data), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        a = ctx.saved_arrays[0]
+        return (np.zeros_like(a.data),)
+
+
+@register(OperatorId.SIGN, op_requirements=OperatorRequirements.Autograd)
+def sign_autograd(a: ArrayCoercible) -> Array:
+    return Sign.apply(a)
+
+
+@register(OperatorId.COPY)
+def copy_cpu(a: ArrayCoercible) -> Array:
+    a = ensure_array(a)
+    return Array(a.data.copy(), device="cpu_np", requires_grad=False)
+
+
+class Copy(Function):
+    @staticmethod
+    def forward(ctx: Context, a: ArrayCoercible) -> Array:
+        a = ensure_array(a)
+        return Array(a.data.copy(), device=a.device, requires_grad=a.requires_grad)
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray, ...]:
+        return (grad,)
+
+
+@register(OperatorId.COPY, op_requirements=OperatorRequirements.Autograd)
+def copy_autograd(a: ArrayCoercible) -> Array:
+    return Copy.apply(a)
+
+
+@register(OperatorId.WHERE)
+def where_cpu(cond: ArrayCoercible, x: ArrayCoercible, y: ArrayCoercible) -> Array:
+    cond, x, y = ensure_array(cond), ensure_array(x), ensure_array(y)
+    return Array(np.where(cond.data, x.data, y.data), device="cpu_np", requires_grad=False)
+
+
+class Where(Function):
+    @staticmethod
+    def forward(ctx: Context, cond: ArrayCoercible, x: ArrayCoercible, y: ArrayCoercible) -> Array:
+        cond, x, y = ensure_array(cond), ensure_array(x), ensure_array(y)
+        ctx.cond = cond.data.copy()
+        ctx.store(x, y)
+        return Array(
+            np.where(cond.data, x.data, y.data),
+            device=x.device,
+            requires_grad=x.requires_grad or y.requires_grad,
+        )
+
+    @staticmethod
+    def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        x, y = ctx.saved_arrays
+        cond = ctx.cond
+        grad_x = unbroadcast(grad * cond, x.shape)
+        grad_y = unbroadcast(grad * ~cond, y.shape)
+        return None, grad_x, grad_y
+
+
+@register(OperatorId.WHERE, op_requirements=OperatorRequirements.Autograd)
+def where_autograd(cond: ArrayCoercible, x: ArrayCoercible, y: ArrayCoercible) -> Array:
+    return Where.apply(cond, x, y)

@@ -263,6 +263,16 @@ def argmax_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = Fals
     )
 
 
+@register(OperatorId.ARGMIN)
+def argmin_cpu(a: ArrayCoercible, axis: int | None = None, keepdims: bool = False) -> Array:
+    a = ensure_array(a)
+    return Array(
+        np.argmin(a.data, axis, keepdims=keepdims),
+        device="cpu_np",
+        requires_grad=False,
+    )
+
+
 @register(OperatorId.VAR)
 def var_cpu(
     a: ArrayCoercible, axis: int | None = None, ddof: int = 0, keepdims: bool = False

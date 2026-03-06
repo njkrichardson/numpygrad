@@ -147,6 +147,15 @@ class Array:
     def __rmul__(self, other: ArrayCoercible) -> "Array":
         return dispatch(OperatorId.MUL, self, other)
 
+    def __radd__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.ADD, other, self)
+
+    def __rsub__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.ADD, other, -self)
+
+    def __rtruediv__(self, other: ArrayCoercible) -> "Array":
+        return dispatch(OperatorId.MUL, other, self**-1)
+
     def __neg__(self) -> "Array":
         return self * -1.0
 
@@ -217,6 +226,30 @@ class Array:
 
     def argmax(self, axis: int | None = None, keepdims: bool = False) -> "Array":
         return dispatch(OperatorId.ARGMAX, self, axis=axis, keepdims=keepdims)
+
+    def argmin(self, axis: int | None = None, keepdims: bool = False) -> "Array":
+        return dispatch(OperatorId.ARGMIN, self, axis=axis, keepdims=keepdims)
+
+    def sin(self) -> "Array":
+        return dispatch(OperatorId.SIN, self)
+
+    def cos(self) -> "Array":
+        return dispatch(OperatorId.COS, self)
+
+    def tan(self) -> "Array":
+        return dispatch(OperatorId.TAN, self)
+
+    def floor(self) -> "Array":
+        return dispatch(OperatorId.FLOOR, self)
+
+    def ceil(self) -> "Array":
+        return dispatch(OperatorId.CEIL, self)
+
+    def sign(self) -> "Array":
+        return dispatch(OperatorId.SIGN, self)
+
+    def copy(self) -> "Array":
+        return dispatch(OperatorId.COPY, self)
 
     # --- simple wrappers (no autograd) ---
 

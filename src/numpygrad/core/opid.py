@@ -13,6 +13,14 @@ class OperatorId(enum.StrEnum):
     MAXIMUM = enum.auto()
     MINIMUM = enum.auto()
     RELU = enum.auto()
+    SIN = enum.auto()
+    COS = enum.auto()
+    TAN = enum.auto()
+    FLOOR = enum.auto()
+    CEIL = enum.auto()
+    SIGN = enum.auto()
+    WHERE = enum.auto()
+    COPY = enum.auto()
 
     # reductions
     SUM = enum.auto()
@@ -21,6 +29,7 @@ class OperatorId(enum.StrEnum):
     MIN = enum.auto()
     PRODUCT = enum.auto()
     ARGMAX = enum.auto()
+    ARGMIN = enum.auto()
     VAR = enum.auto()
     CUMSUM = enum.auto()
     CUMPROD = enum.auto()

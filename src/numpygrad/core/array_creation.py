@@ -19,6 +19,18 @@ def zeros_like(x: Array | np.ndarray, **kwargs) -> Array:
     return Array(np.zeros_like(x.data if isinstance(x, Array) else x), **kwargs)
 
 
+def ones_like(x: Array | np.ndarray, **kwargs) -> Array:
+    return Array(np.ones_like(x.data if isinstance(x, Array) else x), **kwargs)
+
+
+def empty_like(x: Array | np.ndarray, **kwargs) -> Array:
+    return Array(np.empty_like(x.data if isinstance(x, Array) else x), **kwargs)
+
+
+def full(shape: tuple[int, ...] | int, fill_value: float | int, **kwargs) -> Array:
+    return Array(np.full(shape, fill_value), **kwargs)
+
+
 def arange(start: float, stop: float | None = None, step: int = 1, **kwargs) -> Array:
     if stop is None:
         stop = start

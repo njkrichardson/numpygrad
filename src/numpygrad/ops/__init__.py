@@ -1,3 +1,5 @@
+import numpy as np
+
 import numpygrad.ops.activations as activations
 import numpygrad.ops.conv as conv
 import numpygrad.ops.elementwise as elementwise
@@ -80,6 +82,56 @@ def relu(a: ArrayCoercible) -> Array:
     return dispatch(OperatorId.RELU, a)
 
 
+def sin(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.SIN, a)
+
+
+def cos(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.COS, a)
+
+
+def tan(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.TAN, a)
+
+
+def floor(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.FLOOR, a)
+
+
+def ceil(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.CEIL, a)
+
+
+def sign(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.SIGN, a)
+
+
+def copy(a: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.COPY, a)
+
+
+def where(cond: ArrayCoercible, x: ArrayCoercible, y: ArrayCoercible) -> Array:
+    return dispatch(OperatorId.WHERE, cond, x, y)
+
+
+def isnan(a: ArrayCoercible) -> Array:
+    from numpygrad.ops.core import ensure_array
+
+    return Array(np.isnan(ensure_array(a).data))
+
+
+def isinf(a: ArrayCoercible) -> Array:
+    from numpygrad.ops.core import ensure_array
+
+    return Array(np.isinf(ensure_array(a).data))
+
+
+def isfinite(a: ArrayCoercible) -> Array:
+    from numpygrad.ops.core import ensure_array
+
+    return Array(np.isfinite(ensure_array(a).data))
+
+
 # reductions
 
 
@@ -105,6 +157,10 @@ def max(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
 
 def argmax(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
     return dispatch(OperatorId.ARGMAX, a, axis=axis, keepdims=keepdims)
+
+
+def argmin(a: ArrayCoercible, axis=None, keepdims=False) -> Array:
+    return dispatch(OperatorId.ARGMIN, a, axis=axis, keepdims=keepdims)
 
 
 def var(a: ArrayCoercible, axis=None, ddof: int = 0, keepdims: bool = False) -> Array:
@@ -216,6 +272,8 @@ def trace(a: ArrayCoercible, offset: int = 0) -> Array:
 
 
 matmul = mm
+concatenate = cat
+expand_dims = unsqueeze
 
 
 # convolution
@@ -270,6 +328,17 @@ __all__ = [
     "clip",
     "maximum",
     "minimum",
+    "sin",
+    "cos",
+    "tan",
+    "floor",
+    "ceil",
+    "sign",
+    "copy",
+    "where",
+    "isnan",
+    "isinf",
+    "isfinite",
     # transforms
     "transpose",
     "permute",
@@ -284,6 +353,9 @@ __all__ = [
     "triu",
     "split",
     "transforms",
+    # aliases
+    "concatenate",
+    "expand_dims",
     # reductions
     "reductions",
     "mean",
@@ -293,6 +365,7 @@ __all__ = [
     "sqrt",
     "cumsum",
     "cumprod",
+    "argmin",
     # linear algebra
     "linalg",
     "mm",
