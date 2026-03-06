@@ -56,11 +56,12 @@ pip install -e ".[examples]"  # matplotlib for plotting
 ## Quick start
 
 ```python
-import numpygrad as np # live on the edge! 
+import numpygrad as np # live on the edge!
+import numpygrad.random as npr
 import numpygrad.nn as nn
 
 # Arrays and gradients
-x = np.randn((3, 4), requires_grad=True)
+x = npr.randn((3, 4), requires_grad=True)
 y = (x ** 2).sum()
 y.backward()
 print(x.grad)  # gradients of sum(x²) w.r.t. x
@@ -69,8 +70,8 @@ print(x.grad)  # gradients of sum(x²) w.r.t. x
 net = nn.MLP(input_dim=1, hidden_sizes=[8, 8], output_dim=1)
 optimizer = np.optim.SGD(net.parameters(), step_size=1e-1)
 
-x = np.randn(32, 1)
-targets = np.randn(32, 1)
+x = npr.randn((32, 1))
+targets = npr.randn((32, 1))
 out = net(x)
 loss = ((out - targets) ** 2).mean()
 loss.backward()
