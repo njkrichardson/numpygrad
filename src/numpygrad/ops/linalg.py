@@ -64,7 +64,7 @@ class Matmul(Function):
         # reshape 1D inputs to 2D for matmul
         if a_data.ndim == 1:
             a_data = a_data[None, :]  # row vector
-            grad_data = grad_data[None, :]
+            grad_data = grad_data.reshape(1, 1) if grad_data.ndim == 0 else grad_data[None, :]
         if b_data.ndim == 1:
             b_data = b_data[:, None]  # column vector
             grad_data = grad_data[:, None] if grad_data.ndim == 1 else grad_data
