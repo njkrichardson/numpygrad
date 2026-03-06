@@ -16,14 +16,14 @@ Override ``forward`` with the computation your module performs::
     class Affine(nn.Module):
         def __init__(self, in_features: int, out_features: int) -> None:
             super().__init__()
-            self.weight = nn.Parameter(npg.randn((in_features, out_features)))
+            self.weight = nn.Parameter(npg.random.randn((in_features, out_features)))
             self.bias   = nn.Parameter(npg.zeros((out_features,)))
 
         def forward(self, x: npg.array) -> npg.array:
             return x @ self.weight + self.bias
 
     layer = Affine(4, 8)
-    out = layer(npg.randn((2, 4)))  # shape (2, 8)
+    out = layer(npg.random.randn((2, 4)))  # shape (2, 8)
 
 Any attribute assigned as a ``Parameter`` is automatically included in
 ``module.parameters()`` and therefore in the optimizer's update step.

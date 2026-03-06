@@ -88,10 +88,4 @@ notebook) or saved to a temporary file.
 Seeding
 -------
 
-``npg.manual_seed(seed)``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Set the NumPy random seed for reproducible initialisation and data shuffling::
-
-    npg.manual_seed(42)
-    model = nn.MLP(4, [32], 2)   # weights initialised with seed 42
+For ``npg.manual_seed`` and the full ``npg.random`` namespace see :doc:`random`.

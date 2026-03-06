@@ -1,3 +1,11 @@
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _version
+
+try:
+    __version__ = _version("numpygrad")
+except PackageNotFoundError:
+    __version__ = "0.0.0+unknown"
+
 import numpygrad.configuration as configuration
 import numpygrad.optim as optim
 import numpygrad.random as random
@@ -64,6 +72,7 @@ from numpygrad.ops import (
 from numpygrad.utils import Log, io
 
 __all__ = [
+    "__version__",
     "array",
     "ndarray",
     "configuration",

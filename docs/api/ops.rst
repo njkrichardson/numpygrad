@@ -162,8 +162,8 @@ Example::
 
     import numpygrad as npg
 
-    x = npg.randn((2, 3, 32, 32))                # batch of 2 RGB images
-    w = npg.randn((16, 3, 3, 3), requires_grad=True)
+    x = npg.random.randn((2, 3, 32, 32))                # batch of 2 RGB images
+    w = npg.random.randn((16, 3, 3, 3), requires_grad=True)
     out = npg.conv2d(x, w, stride=1, padding=1)  # (2, 16, 32, 32)
 
 Special
@@ -194,6 +194,6 @@ Embedding lookup (``npg.ops.embedding``)
 
 Row-wise lookup into a weight matrix; used internally by ``nn.Embedding``::
 
-    weight = npg.randn((vocab_size, embed_dim), requires_grad=True)
+    weight = npg.random.randn((vocab_size, embed_dim), requires_grad=True)
     indices = npg.array([0, 3, 1])
     out = npg.ops.embedding(weight, indices)   # (3, embed_dim)

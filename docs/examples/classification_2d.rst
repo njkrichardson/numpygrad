@@ -11,7 +11,7 @@ interleaved spiral arms, one per class. The example demonstrates
 multi-class cross-entropy loss, accuracy estimation, and decision-boundary
 visualisation.
 
-.. image:: /../../examples/classification_2d/media/classification_2d.png
+.. image:: ../../examples/classification_2d/media/classification_2d.png
    :width: 750
    :align: center
 

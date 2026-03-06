@@ -16,7 +16,7 @@ acyclic graph (DAG) where:
 - **Nodes** are ``Array`` objects.
 - **Edges** point from an output array back to its inputs.
 - **Leaf nodes** are arrays you created directly (e.g. with ``npg.array(...)``
-  or ``npg.randn(...)``). They have no ``grad_fn``.
+  or ``npg.random.randn(...)``). They have no ``grad_fn``.
 
 A simple example::
 

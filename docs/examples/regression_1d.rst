@@ -13,7 +13,7 @@ optimizer → loss → backward → step.
 
 The learned fit is optionally visualised with matplotlib:
 
-.. image:: /../../examples/regression_1d/media/regression_1d_fit.png
+.. image:: ../../examples/regression_1d/media/regression_1d_fit.png
    :width: 600
    :align: center
 

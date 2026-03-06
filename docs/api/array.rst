@@ -36,12 +36,8 @@ Creating arrays
      - ``num`` evenly spaced values in ``[start, stop]``
    * - ``npg.eye(n)``
      - ``n×n`` identity matrix
-   * - ``npg.randn(shape, **kw)``
-     - Samples from a standard normal distribution
-   * - ``npg.randint(low, high, size, **kw)``
-     - Random integers in ``[low, high)``
 
-All factory functions accept ``requires_grad`` and ``dtype`` keyword arguments.
+All factory functions accept ``requires_grad`` and ``dtype`` keyword arguments. For random array creation see :doc:`random`.
 
 Properties
 ----------
@@ -96,7 +92,7 @@ Indexing
 Arrays support standard NumPy-style indexing. Getting a slice is
 differentiable::
 
-    x = npg.randn((4, 8), requires_grad=True)
+    x = npg.random.randn((4, 8), requires_grad=True)
     row = x[0]           # differentiable slice
     block = x[1:3, 2:5]  # differentiable slice
 
@@ -159,7 +155,7 @@ leaf arrays with ``requires_grad=True``::
 
 For non-scalar outputs, pass an explicit upstream gradient of the same shape::
 
-    out = npg.randn((3, 4), requires_grad=True) * 2
+    out = npg.random.randn((3, 4), requires_grad=True) * 2
     out.backward(npg.ones((3, 4)).data)
 
 Dtypes

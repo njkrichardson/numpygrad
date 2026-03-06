@@ -29,6 +29,7 @@ No C++ extensions, no CUDA — just readable, hackable Python.
    :caption: API Reference
 
    api/array
+   api/random
    api/ops
    api/nn
    api/optim

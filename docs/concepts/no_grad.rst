@@ -14,7 +14,7 @@ block of code::
 
     import numpygrad as npg
 
-    x = npg.randn((4, 8), requires_grad=True)
+    x = npg.random.randn((4, 8), requires_grad=True)
     model = ...
 
     with npg.no_grad():

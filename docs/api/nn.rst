@@ -17,7 +17,7 @@ Base class for all layers and models. Subclass it and override ``forward``::
     class MyLayer(nn.Module):
         def __init__(self) -> None:
             super().__init__()
-            self.weight = nn.Parameter(npg.randn((4, 4)))
+            self.weight = nn.Parameter(npg.random.randn((4, 4)))
 
         def forward(self, x):
             return x @ self.weight
@@ -66,7 +66,7 @@ Fully connected layer: ``y = x @ W + b``.
 ::
 
     layer = nn.Linear(8, 4)
-    out = layer(npg.randn((16, 8)))   # (16, 4)
+    out = layer(npg.random.randn((16, 8)))   # (16, 4)
 
 ``nn.MLP(input_dim, hidden_sizes, output_dim, activation="relu")``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,7 +88,7 @@ activation. ``activation`` can be ``"relu"``, ``"tanh"``, or ``"sigmoid"``::
 accept an int or a ``(H, W)`` tuple::
 
     conv = nn.Conv2d(3, 32, kernel_size=3, padding=1)
-    out = conv(npg.randn((8, 3, 28, 28)))   # (8, 32, 28, 28)
+    out = conv(npg.random.randn((8, 3, 28, 28)))   # (8, 32, 28, 28)
 
 ``nn.Embedding(num_embeddings, embedding_dim)``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ When ``elementwise_affine=True`` (the default), learnable ``weight`` (gamma)
 and ``bias`` (beta) parameters are added::
 
     ln = nn.LayerNorm(512)
-    out = ln(npg.randn((4, 16, 512)))   # (4, 16, 512), normalised over dim=-1
+    out = ln(npg.random.randn((4, 16, 512)))   # (4, 16, 512), normalised over dim=-1
 
 ``nn.Dropout(p=0.5)``
 ~~~~~~~~~~~~~~~~~~~~~
