@@ -32,13 +32,19 @@ A small **autograd** and neural network library with a **PyTorch-like API**, bui
 
 ## Installation
 
-From the project root:
-
 ```bash
-pip install -e .
+pip install numpygrad
 ```
 
 Requires Python ≥3.12 and NumPy ≥2.4.2.
+
+Or install from source in editable mode:
+
+```bash
+git clone https://github.com/njkrichardson/numpygrad.git
+cd numpygrad
+pip install -e .
+```
 
 Optional dependencies (e.g. for tests and examples):
 

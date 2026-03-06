@@ -4,9 +4,13 @@ Getting Started
 Installation
 ------------
 
-Install from source in editable mode::
+Install from PyPI::
 
-    git clone https://github.com/njkrichardson/numpygrad.git    
+    pip install numpygrad
+
+Or install from source in editable mode::
+
+    git clone https://github.com/njkrichardson/numpygrad.git
     cd numpygrad
     pip install -e .
 
