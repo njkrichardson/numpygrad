@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "numpygrad"
-version = "0.1.0"
+version = "0.1.1"
 description = "A NumPy-only autograd and neural network library with a PyTorch-like API"
 readme = "README.md"
 license = "MIT"
