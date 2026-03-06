@@ -38,6 +38,7 @@ class Context:
         self.axis1: int = 0
         self.axis2: int = 1
         self.mask: np.ndarray | None = None
+        self.cond: np.ndarray | None = None
 
     def store(self, *arrays) -> None:
         self._saved_arrays = arrays

@@ -548,6 +548,7 @@ class Where(Function):
     @staticmethod
     def backward(ctx: Context, grad: np.ndarray) -> tuple[np.ndarray | None, ...]:
         x, y = ctx.saved_arrays
+        assert ctx.cond is not None
         cond = ctx.cond
         grad_x = unbroadcast(grad * cond, x.shape)
         grad_y = unbroadcast(grad * ~cond, y.shape)
